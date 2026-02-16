@@ -280,34 +280,24 @@ function drawWheel() {
     }
     ctx.restore();
 
-    // Labels
-    ctx.save();
+    // Labels - always horizontal (no rotation issues)
     for (let i = 0; i < SEGMENT_COUNT; i++) {
         const midAngle = wheelAngle + i * ARC + ARC / 2 - Math.PI / 2;
-        const lx = cx + Math.cos(midAngle) * radius * 0.65;
-        const ly = cy + Math.sin(midAngle) * radius * 0.65;
-        ctx.save();
-        ctx.translate(lx, ly);
-        // Normalize angle to 0-2PI to check if text would be upside down
-        let normAngle = midAngle % (Math.PI * 2);
-        if (normAngle < 0) normAngle += Math.PI * 2;
-        // If segment is in bottom half (between PI/2 and 3PI/2), flip 180°
-        if (normAngle > Math.PI / 2 && normAngle < Math.PI * 3 / 2) {
-            ctx.rotate(midAngle - Math.PI / 2);
-        } else {
-            ctx.rotate(midAngle + Math.PI / 2);
-        }
+        const lx = cx + Math.cos(midAngle) * radius * 0.62;
+        const ly = cy + Math.sin(midAngle) * radius * 0.62;
         ctx.fillStyle = '#fff';
-        ctx.font = `bold ${Math.round(Math.min(radius*0.18, 24))}px "Segoe UI",Arial,sans-serif`;
+        ctx.font = `bold ${Math.round(Math.min(radius*0.18, 26))}px "Segoe UI",Arial,sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.globalAlpha = wheelFadeIn;
-        ctx.shadowColor = 'rgba(0,0,0,0.7)';
-        ctx.shadowBlur = 4;
-        ctx.fillText(WHEEL_SEGMENTS[i].label, 0, 0);
-        ctx.restore();
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 6;
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+        ctx.lineWidth = 3;
+        ctx.strokeText(WHEEL_SEGMENTS[i].label, lx, ly);
+        ctx.fillText(WHEEL_SEGMENTS[i].label, lx, ly);
+        ctx.shadowBlur = 0;
     }
-    ctx.restore();
 
     // Center circle
     ctx.globalAlpha = wheelFadeIn;
