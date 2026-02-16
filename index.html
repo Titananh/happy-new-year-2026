@@ -348,9 +348,8 @@ function drawWheel() {
 }
 
 function getWheelSegmentAtPointer() {
-    // Pointer is at top (12 o'clock = -PI/2)
-    // Normalize angle
-    let a = (-wheelAngle + Math.PI / 2) % (Math.PI * 2);
+    // Pointer is at top (-PI/2). Segment i spans from wheelAngle + i*ARC - PI/2
+    let a = (-wheelAngle) % (Math.PI * 2);
     if (a < 0) a += Math.PI * 2;
     const idx = Math.floor(a / ARC) % SEGMENT_COUNT;
     return idx;
