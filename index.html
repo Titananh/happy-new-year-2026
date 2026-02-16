@@ -85,7 +85,9 @@ resize();
 
 // ==================== CONFIG ====================
 const MAX_PARTICLES = 8000;
-const TET_TARGET = new Date('2026-02-17T00:00:00+07:00').getTime();
+// TEST: 7s from now (2s overlay + 5s visible countdown)
+const TET_TARGET = Date.now() + 7000;
+// REAL: const TET_TARGET = new Date('2026-02-17T00:00:00+07:00').getTime();
 
 const TEXT_SEQUENCE = [
     { text: '3', hold: 1200, isCountdown: true },
