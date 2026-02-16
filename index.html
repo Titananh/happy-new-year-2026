@@ -12,7 +12,7 @@
             cursor: default;
             user-select: none;
         }
-        canvas { display: block; }
+        canvas { display: block; width: 100vw; height: 100vh; }
 
         /* ===== ROTATE WARNING OVERLAY ===== */
         #rotateOverlay {
@@ -32,8 +32,7 @@
             pointer-events: none;
         }
         .rotate-icon {
-            width: 80px;
-            height: 130px;
+            width: 80px; height: 130px;
             border: 3px solid #ffd700;
             border-radius: 12px;
             position: relative;
@@ -42,23 +41,16 @@
         }
         .rotate-icon::before {
             content: '';
-            position: absolute;
-            bottom: 8px;
-            left: 50%;
+            position: absolute; bottom: 8px; left: 50%;
             transform: translateX(-50%);
-            width: 20px;
-            height: 3px;
-            background: #ffd700;
-            border-radius: 2px;
+            width: 20px; height: 3px;
+            background: #ffd700; border-radius: 2px;
         }
         .rotate-icon::after {
-            content: '↻';
-            position: absolute;
-            top: -40px;
-            left: 50%;
+            content: '\21BB';
+            position: absolute; top: -40px; left: 50%;
             transform: translateX(-50%);
-            font-size: 30px;
-            color: #ffd700;
+            font-size: 30px; color: #ffd700;
         }
         @keyframes rotatePhone {
             0%, 30% { transform: rotate(0deg); }
@@ -69,15 +61,12 @@
             color: #ffd700;
             font-family: 'Segoe UI', Arial, sans-serif;
             font-size: clamp(14px, 3.5vw, 22px);
-            text-align: center;
-            line-height: 1.6;
-            padding: 0 20px;
+            text-align: center; line-height: 1.6; padding: 0 20px;
         }
 
-        /* ===== PORTRAIT BLOCKER (always shows in portrait on mobile) ===== */
+        /* ===== PORTRAIT BLOCKER ===== */
         #portraitBlocker {
-            position: fixed;
-            top: 0; left: 0;
+            position: fixed; top: 0; left: 0;
             width: 100%; height: 100%;
             background: #000;
             display: none;
@@ -86,39 +75,24 @@
             justify-content: center;
             z-index: 50;
         }
-        #portraitBlocker .rotate-icon {
-            animation: rotatePhone 2s ease-in-out infinite;
-        }
-
         @media screen and (orientation: portrait) and (max-width: 900px) {
-            #portraitBlocker {
-                display: flex !important;
-            }
+            #portraitBlocker { display: flex !important; }
         }
-        @media screen and (orientation: landscape),
-               screen and (min-width: 901px) {
-            #portraitBlocker {
-                display: none !important;
-            }
+        @media screen and (orientation: landscape), screen and (min-width: 901px) {
+            #portraitBlocker { display: none !important; }
         }
     </style>
 </head>
 <body>
 
-<!-- Initial 2-second warning -->
 <div id="rotateOverlay">
     <div class="rotate-icon"></div>
-    <div class="rotate-text">
-        Vui lòng xoay ngang điện thoại<br>để có trải nghiệm tốt nhất
-    </div>
+    <div class="rotate-text">Vui lòng xoay ngang điện thoại<br>để có trải nghiệm tốt nhất</div>
 </div>
 
-<!-- Persistent portrait blocker -->
 <div id="portraitBlocker">
     <div class="rotate-icon"></div>
-    <div class="rotate-text">
-        Xoay ngang điện thoại<br>để tiếp tục xem
-    </div>
+    <div class="rotate-text">Xoay ngang điện thoại<br>để tiếp tục xem</div>
 </div>
 
 <canvas id="canvas"></canvas>
@@ -126,70 +100,74 @@
 <script>
 // ============================================================
 //  HAPPY NEW YEAR 2026 - PARTICLE TEXT + FIREWORKS
-//  Optimized for LANDSCAPE orientation
+//  Fixed for mobile High-DPI screens
 // ============================================================
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-let W, H;
+let W, H, DPR;
 
 function resize() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
+    DPR = window.devicePixelRatio || 1;
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 }
-window.addEventListener('resize', resize);
+window.addEventListener('resize', () => { resize(); });
 resize();
 
 // ==================== CONFIGURATION ====================
-const MAX_PARTICLES = 6000;
-const PARTICLE_GAP = 2;
+const MAX_PARTICLES = 8000;
 
 const TEXT_SEQUENCE = [
-    { text: '3',                              hold: 1200, isCountdown: true },
-    { text: '2',                              hold: 1200, isCountdown: true },
-    { text: '1',                              hold: 1200, isCountdown: true },
-    { text: 'Happy New Year 2026',            hold: 4500, isReveal: true },
-    { text: 'Sứt môi của anh💋',              hold: 3800 },
-    { text: 'Nhiều niềm vui và hạnh phúc',   hold: 3800 },
-    { text: 'Cảm ơn vì em đã đến',           hold: 3800 },
-    { text: 'Yêu thương và quan tâm anh',    hold: 3800 },
-    { text: '♥ Chúc Mừng Năm Mới ♥',         hold: 5500, isFinal: true },
+    { text: '3',                            hold: 1200, isCountdown: true },
+    { text: '2',                            hold: 1200, isCountdown: true },
+    { text: '1',                            hold: 1200, isCountdown: true },
+    { text: 'Happy New Year\n2026',         hold: 4500, isReveal: true },
+    { text: 'Sứt môi của anh💋',            hold: 3800 },
+    { text: 'Nhiều niềm vui\nvà hạnh phúc', hold: 3800 },
+    { text: 'Cảm ơn vì\nem đã đến',        hold: 3800 },
+    { text: 'Yêu thương và\nquan tâm anh',  hold: 3800 },
+    { text: '♥ Chúc Mừng Năm Mới ♥',       hold: 5500, isFinal: true },
 ];
 
 // ==================== COLOR UTILS ====================
 function randomParticleColor(isFinal) {
     if (isFinal) {
         const r = Math.random();
-        if (r < 0.5) return `hsl(350, ${85+Math.random()*15}%, ${55+Math.random()*15}%)`;
-        if (r < 0.75) return `hsl(${40+Math.random()*15}, 100%, ${65+Math.random()*15}%)`;
-        return `hsl(0, 0%, ${85+Math.random()*15}%)`;
+        if (r < 0.5) return `hsl(350, ${85+Math.random()*15}%, ${60+Math.random()*15}%)`;
+        if (r < 0.75) return `hsl(${40+Math.random()*15}, 100%, ${68+Math.random()*15}%)`;
+        return `hsl(0, 0%, ${88+Math.random()*12}%)`;
     }
     const r = Math.random();
-    if (r < 0.40) return `hsl(0, 0%, ${82+Math.random()*18}%)`;
-    if (r < 0.65) return `hsl(${42+Math.random()*12}, 100%, ${62+Math.random()*18}%)`;
-    if (r < 0.75) return `hsl(350, ${80+Math.random()*20}%, ${50+Math.random()*20}%)`;
-    if (r < 0.83) return `hsl(${115+Math.random()*25}, ${65+Math.random()*30}%, ${50+Math.random()*20}%)`;
-    if (r < 0.90) return `hsl(${185+Math.random()*35}, ${75+Math.random()*25}%, ${50+Math.random()*20}%)`;
-    return `hsl(${Math.random()*360}, ${80+Math.random()*20}%, ${55+Math.random()*15}%)`;
+    if (r < 0.50) return `hsl(0, 0%, ${88+Math.random()*12}%)`;
+    if (r < 0.72) return `hsl(${42+Math.random()*12}, 100%, ${68+Math.random()*15}%)`;
+    if (r < 0.82) return `hsl(350, ${80+Math.random()*20}%, ${55+Math.random()*20}%)`;
+    if (r < 0.90) return `hsl(${115+Math.random()*25}, ${65+Math.random()*30}%, ${55+Math.random()*20}%)`;
+    return `hsl(${185+Math.random()*35}, ${75+Math.random()*25}%, ${55+Math.random()*20}%)`;
 }
 
 function randomFireworkColor() {
     const hues = [0, 30, 50, 120, 180, 210, 280, 330];
     const hue = hues[Math.floor(Math.random() * hues.length)] + Math.random() * 20;
-    return `hsl(${hue}, ${85+Math.random()*15}%, ${55+Math.random()*20}%)`;
+    return `hsl(${hue}, ${90+Math.random()*10}%, ${60+Math.random()*20}%)`;
 }
 
 // ==================== PARTICLE CLASS ====================
 class Particle {
     constructor(tx, ty, color) {
         const angle = Math.random() * Math.PI * 2;
-        const dist = Math.random() * Math.max(W, H) * 0.7 + 100;
+        const dist = Math.random() * Math.max(W, H) * 0.6 + 80;
         this.x = W / 2 + Math.cos(angle) * dist;
         this.y = H / 2 + Math.sin(angle) * dist;
         this.targetX = tx;
         this.targetY = ty;
         this.color = color;
-        this.baseSize = Math.random() * 2.2 + 1.2;
+        this.baseSize = Math.random() * 1.5 + 1.5;
         this.size = this.baseSize;
         this.vx = 0;
         this.vy = 0;
@@ -200,7 +178,7 @@ class Particle {
     }
 
     formToTarget() {
-        this.alpha = Math.min(1, this.alpha + 0.04);
+        this.alpha = Math.min(1, this.alpha + 0.045);
         const dx = this.targetX - this.x;
         const dy = this.targetY - this.y;
         this.vx += dx * 0.065;
@@ -217,13 +195,13 @@ class Particle {
         this.vy += (this.targetY - this.y) * 0.12;
         this.vx *= 0.78;
         this.vy *= 0.78;
-        this.vx += (Math.random() - 0.5) * 0.15;
-        this.vy += (Math.random() - 0.5) * 0.15;
+        this.vx += (Math.random() - 0.5) * 0.12;
+        this.vy += (Math.random() - 0.5) * 0.12;
         this.x += this.vx;
         this.y += this.vy;
         const tw = Math.sin(t * 0.002 * this.twinkleSpd + this.twinkleOff);
-        this.size = this.baseSize * (0.75 + tw * 0.35);
-        this.alpha = 0.85 + tw * 0.15;
+        this.size = this.baseSize * (0.85 + tw * 0.2);
+        this.alpha = 0.9 + tw * 0.1;
     }
 
     explode() {
@@ -246,7 +224,8 @@ class Particle {
 
     draw() {
         if (!this.alive || this.alpha <= 0) return;
-        ctx.globalAlpha = this.alpha * 0.85;
+        // Bright core
+        ctx.globalAlpha = this.alpha;
         ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -255,56 +234,60 @@ class Particle {
 
     drawGlow() {
         if (!this.alive || this.alpha <= 0) return;
-        ctx.globalAlpha = this.alpha * 0.3;
+        ctx.globalAlpha = this.alpha * 0.35;
         ctx.fillStyle = this.color;
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size * 2.8, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, this.size * 2.5, 0, Math.PI * 2);
         ctx.fill();
     }
 }
 
-// ==================== TEXT-TO-PARTICLES (LANDSCAPE OPTIMIZED) ====================
+// ==================== TEXT-TO-PARTICLES ====================
 function getTextPixels(text) {
     const off = document.createElement('canvas');
-    off.width = W;
-    off.height = H;
+    const oDPR = DPR;
+    off.width = W * oDPR;
+    off.height = H * oDPR;
     const oc = off.getContext('2d');
+    oc.setTransform(oDPR, 0, 0, oDPR, 0, 0);
 
     const lines = text.split('\n');
     const maxLen = Math.max(...lines.map(l => l.length));
     let fontSize;
 
-    // Landscape: use width as main constraint, single line preferred
     if (maxLen <= 2) {
-        fontSize = Math.min(W * 0.25, H * 0.65);
+        fontSize = Math.min(W * 0.28, H * 0.7);
     } else if (lines.length === 1) {
-        fontSize = Math.min(W * 0.85 / (maxLen * 0.55), H * 0.35);
+        fontSize = Math.min(W * 0.88 / (maxLen * 0.55), H * 0.42);
     } else {
         fontSize = Math.min(
-            W * 0.85 / (maxLen * 0.55),
-            H * 0.60 / (lines.length * 1.3)
+            W * 0.88 / (maxLen * 0.55),
+            H * 0.65 / (lines.length * 1.3)
         );
     }
-    fontSize = Math.max(fontSize, 20);
+    fontSize = Math.max(fontSize, 28);
 
     oc.fillStyle = '#fff';
     oc.font = `bold ${Math.round(fontSize)}px "Segoe UI", "Helvetica Neue", Arial, sans-serif`;
     oc.textAlign = 'center';
     oc.textBaseline = 'middle';
 
-    const lh = fontSize * 1.35;
+    const lh = fontSize * 1.3;
     const startY = H / 2 - ((lines.length - 1) * lh) / 2;
     lines.forEach((line, i) => oc.fillText(line, W / 2, startY + i * lh));
 
-    const imgData = oc.getImageData(0, 0, W, H).data;
+    // Sample at CSS pixel coordinates
+    const imgData = oc.getImageData(0, 0, off.width, off.height).data;
     const positions = [];
-    let gap = PARTICLE_GAP;
-    if (H < 400) gap = 3;
-    if (H < 300) gap = 4;
+    const gap = 3;
+    const imgW = off.width;
 
     for (let y = 0; y < H; y += gap) {
         for (let x = 0; x < W; x += gap) {
-            if (imgData[(y * W + x) * 4 + 3] > 128) {
+            const px = Math.round(x * oDPR);
+            const py = Math.round(y * oDPR);
+            const idx = (py * imgW + px) * 4 + 3;
+            if (imgData[idx] > 100) {
                 positions.push({ x, y });
             }
         }
@@ -350,13 +333,13 @@ class Rocket {
             ctx.globalAlpha = t.a;
             ctx.fillStyle = this.color;
             ctx.beginPath();
-            ctx.arc(t.x, t.y, 1.2, 0, Math.PI * 2);
+            ctx.arc(t.x, t.y, 1.5, 0, Math.PI * 2);
             ctx.fill();
         });
         ctx.globalAlpha = 1;
         ctx.fillStyle = '#fff';
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
         ctx.fill();
     }
 }
@@ -370,7 +353,7 @@ class Spark {
         this.vx = Math.cos(angle) * speed;
         this.vy = Math.sin(angle) * speed;
         this.alpha = 1;
-        this.size = 0.4 + Math.random() * 1.6;
+        this.size = 0.5 + Math.random() * 2;
         this.alive = true;
         this.gravity = 0.035;
         this.friction = 0.974;
@@ -414,9 +397,7 @@ function updateFireworks(dt) {
             const n = 45 + Math.floor(Math.random() * 55);
             for (let j = 0; j < n; j++) sparks.push(new Spark(r.x, r.y, r.color));
             rockets.splice(i, 1);
-        } else if (!rockets[i].alive) {
-            rockets.splice(i, 1);
-        }
+        } else if (!rockets[i].alive) { rockets.splice(i, 1); }
     }
     for (let i = sparks.length - 1; i >= 0; i--) {
         sparks[i].update();
@@ -460,9 +441,8 @@ class Ring {
 const stars = [];
 for (let i = 0; i < 120; i++) {
     stars.push({
-        x: Math.random() * 3000,
-        y: Math.random() * 2000,
-        size: Math.random() * 1.2 + 0.3,
+        x: Math.random() * 3000, y: Math.random() * 2000,
+        size: Math.random() * 1.5 + 0.4,
         twinkle: Math.random() * Math.PI * 2,
         speed: 0.5 + Math.random() * 2
     });
@@ -483,34 +463,24 @@ function drawStars(t) {
 
 // ==================== AUDIO ====================
 let audioCtx = null;
-
 function initAudio() {
     if (!audioCtx) {
-        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-        catch(e) {}
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
     }
 }
-
 function playTone(freq, dur, type = 'sine', vol = 0.12) {
     if (!audioCtx) return;
     try {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.frequency.value = freq;
-        osc.type = type;
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.value = freq; osc.type = type;
         gain.gain.setValueAtTime(vol, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-        osc.start();
-        osc.stop(audioCtx.currentTime + dur);
+        osc.start(); osc.stop(audioCtx.currentTime + dur);
     } catch(e) {}
 }
-
-function playCountdownBeep() {
-    playTone(523, 0.25, 'triangle', 0.15);
-}
-
+function playCountdownBeep() { playTone(523, 0.25, 'triangle', 0.15); }
 function playRevealChime() {
     playTone(784, 0.15, 'sine', 0.12);
     setTimeout(() => playTone(988, 0.15, 'sine', 0.12), 100);
@@ -520,16 +490,12 @@ function playRevealChime() {
 // ==================== SCENE MANAGER ====================
 let textParticles  = [];
 let dyingParticles = [];
-let sceneIndex     = -1;
-let sceneState     = 'idle';
-let stateStart     = 0;
-let started        = false;
-let beepPlayed     = false;
+let sceneIndex = -1, sceneState = 'idle', stateStart = 0;
+let started = false, beepPlayed = false;
 
 function advanceScene() {
     sceneIndex++;
     if (sceneIndex >= TEXT_SEQUENCE.length) sceneIndex = 0;
-
     const entry = TEXT_SEQUENCE[sceneIndex];
     const isFin = !!entry.isFinal;
     const positions = getTextPixels(entry.text);
@@ -561,20 +527,23 @@ function loop(timestamp) {
 
     const elapsed = timestamp - stateStart;
 
+    // Clear
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, W, H);
 
+    // Stars
     drawStars(timestamp);
 
+    // Fireworks
     updateFireworks(dt);
     ctx.globalCompositeOperation = 'lighter';
     drawFireworks();
 
+    // Rings
     for (let i = rings.length - 1; i >= 0; i--) {
-        rings[i].update();
-        rings[i].draw();
+        rings[i].update(); rings[i].draw();
         if (!rings[i].alive) rings.splice(i, 1);
     }
 
@@ -584,23 +553,16 @@ function loop(timestamp) {
         case 'idle':
             if (elapsed > 600) advanceScene();
             break;
-
         case 'forming': {
             let settled = 0;
-            textParticles.forEach(p => {
-                if (p.formToTarget()) settled++;
-            });
-
+            textParticles.forEach(p => { if (p.formToTarget()) settled++; });
             if (!beepPlayed) {
                 beepPlayed = true;
-                const entry = TEXT_SEQUENCE[sceneIndex];
-                if (entry.isCountdown) playCountdownBeep();
+                if (TEXT_SEQUENCE[sceneIndex].isCountdown) playCountdownBeep();
             }
-
             if (elapsed > 1600 || settled > textParticles.length * 0.92) {
                 sceneState = 'holding';
                 stateStart = timestamp;
-
                 const entry = TEXT_SEQUENCE[sceneIndex];
                 if (entry.isReveal) {
                     playRevealChime();
@@ -611,14 +573,10 @@ function loop(timestamp) {
             }
             break;
         }
-
         case 'holding':
             textParticles.forEach(p => p.holdPosition(timestamp));
-            if (elapsed > TEXT_SEQUENCE[sceneIndex].hold) {
-                explodeScene();
-            }
+            if (elapsed > TEXT_SEQUENCE[sceneIndex].hold) explodeScene();
             break;
-
         case 'exploding':
             dyingParticles.forEach(p => p.updateExploding());
             dyingParticles = dyingParticles.filter(p => p.alive);
@@ -630,16 +588,20 @@ function loop(timestamp) {
             break;
     }
 
+    // Draw particles
     ctx.globalCompositeOperation = 'lighter';
 
+    // Glow layer
     textParticles.forEach(p => p.drawGlow());
+    // Core layer
     textParticles.forEach(p => p.draw());
 
+    // Dying particles
     dyingParticles.forEach(p => {
-        ctx.globalAlpha = p.alpha * 0.15;
+        ctx.globalAlpha = p.alpha * 0.2;
         ctx.fillStyle = p.color;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
         ctx.fill();
     });
     dyingParticles.forEach(p => p.draw());
@@ -648,23 +610,20 @@ function loop(timestamp) {
     ctx.globalAlpha = 1;
 }
 
-// ==================== START WITH 2-SECOND ROTATE WARNING ====================
+// ==================== START ====================
 const rotateOverlay = document.getElementById('rotateOverlay');
 
-// Show warning for 2 seconds, then start animation
 setTimeout(() => {
     rotateOverlay.classList.add('hidden');
-    // Remove from DOM after fade
     setTimeout(() => rotateOverlay.remove(), 600);
-
     initAudio();
+    resize();
     started = true;
     sceneState = 'idle';
     stateStart = performance.now();
     lastFrame = performance.now();
 }, 2000);
 
-// Enable audio on first tap (mobile browsers require interaction)
 document.addEventListener('click', () => initAudio(), { once: true });
 document.addEventListener('touchstart', () => initAudio(), { once: true });
 
