@@ -119,6 +119,15 @@ let wheelAngle = 0, wheelSpinning = false, wheelSpinSpeed = 0;
 let wheelResult = null, wheelDone = false, showWheel = false;
 let wheelFadeIn = 0, wheelConfetti = [], wheelResultTimer = 0;
 
+// ==================== QUESTION PHASE ====================
+let showQuestion = false;
+let questionFadeIn = 0;
+let questionAnswer = null; // null, 'yes', 'no'
+let nitTimer = 0;
+// Button hit areas (recalculated each frame)
+let btnYesRect = { x: 0, y: 0, w: 0, h: 0 };
+let btnNoRect = { x: 0, y: 0, w: 0, h: 0 };
+
 // ==================== PHASE CONTROL ====================
 // countdownPhase: true = showing big clock, false = particle animation
 let countdownPhase = true;
@@ -236,7 +245,8 @@ let sceneIndex=-1,sceneState='idle',stateStart=0,started=false,beepPlayed=false;
 function advanceScene() {
     sceneIndex++;
     if (sceneIndex >= TEXT_SEQUENCE.length) {
-        sceneState = 'toWheel';
+        // Finished all scenes -> transition to question
+        sceneState = 'toQuestion';
         stateStart = performance.now();
         return;
     }
@@ -376,6 +386,132 @@ function drawCountdownClock(timestamp) {
     ctx.textAlign = 'center';
     ctx.fillText('Giao Thừa Tết Nguyên Đán - 00:00 ngày 17/02/2026', cx, cy + H * 0.25);
     ctx.globalAlpha = 1;
+}
+
+// ==================== QUESTION SCREEN ====================
+function drawQuestion(timestamp) {
+    questionFadeIn = Math.min(1, questionFadeIn + 0.025);
+    const cx = W / 2, cy = H / 2;
+
+    if (questionAnswer === 'no') {
+        // "Tặng em cái nịt ạ" screen
+        const nitElapsed = timestamp - nitTimer;
+        let scale = Math.min(1, nitElapsed / 500);
+        scale = 1 - Math.pow(1 - scale, 3);
+
+        ctx.globalAlpha = scale;
+        ctx.fillStyle = '#ffd700';
+        ctx.font = `bold ${Math.round(Math.min(W * 0.06, H * 0.12, 52))}px "Segoe UI",Arial,sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(255,215,0,0.6)';
+        ctx.shadowBlur = 20;
+        ctx.fillText('Tặng em cái nịt ạ 😜', cx, cy - H * 0.05);
+        ctx.shadowBlur = 0;
+
+        ctx.globalAlpha = scale * 0.7;
+        ctx.fillStyle = '#aaa';
+        ctx.font = `${Math.round(Math.min(W * 0.025, 18))}px "Segoe UI",Arial,sans-serif`;
+        ctx.fillText('Haha thôi đùa thôi, reload lại để chọn Có nha! 💕', cx, cy + H * 0.12);
+        ctx.globalAlpha = 1;
+        return;
+    }
+
+    ctx.globalAlpha = questionFadeIn;
+
+    // Question text
+    const titleFs = Math.min(W * 0.045, H * 0.09, 40);
+    ctx.fillStyle = '#ffd700';
+    ctx.font = `bold ${Math.round(titleFs)}px "Segoe UI",Arial,sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(255,215,0,0.5)';
+    ctx.shadowBlur = 15;
+    ctx.fillText('Em Thảo có muốn được lì xì không ạ? 🧧', cx, cy - H * 0.12);
+    ctx.shadowBlur = 0;
+
+    // Buttons
+    const btnW = Math.min(W * 0.18, 180);
+    const btnH = Math.min(H * 0.14, 60);
+    const gap = Math.min(W * 0.06, 50);
+    const btnY = cy + H * 0.06;
+
+    // "Có" button (green)
+    const yesX = cx - gap / 2 - btnW / 2;
+    btnYesRect = { x: yesX - btnW / 2, y: btnY - btnH / 2, w: btnW, h: btnH };
+
+    ctx.fillStyle = '#2ecc71';
+    ctx.shadowColor = 'rgba(46,204,113,0.5)';
+    ctx.shadowBlur = 15;
+    const br = 12;
+    ctx.beginPath();
+    ctx.moveTo(btnYesRect.x + br, btnYesRect.y);
+    ctx.lineTo(btnYesRect.x + btnW - br, btnYesRect.y);
+    ctx.quadraticCurveTo(btnYesRect.x + btnW, btnYesRect.y, btnYesRect.x + btnW, btnYesRect.y + br);
+    ctx.lineTo(btnYesRect.x + btnW, btnYesRect.y + btnH - br);
+    ctx.quadraticCurveTo(btnYesRect.x + btnW, btnYesRect.y + btnH, btnYesRect.x + btnW - br, btnYesRect.y + btnH);
+    ctx.lineTo(btnYesRect.x + br, btnYesRect.y + btnH);
+    ctx.quadraticCurveTo(btnYesRect.x, btnYesRect.y + btnH, btnYesRect.x, btnYesRect.y + btnH - br);
+    ctx.lineTo(btnYesRect.x, btnYesRect.y + br);
+    ctx.quadraticCurveTo(btnYesRect.x, btnYesRect.y, btnYesRect.x + br, btnYesRect.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.round(Math.min(btnH * 0.45, 28))}px "Segoe UI",Arial,sans-serif`;
+    ctx.fillText('Có 🎉', yesX, btnY);
+
+    // "Không" button (red)
+    const noX = cx + gap / 2 + btnW / 2;
+    btnNoRect = { x: noX - btnW / 2, y: btnY - btnH / 2, w: btnW, h: btnH };
+
+    ctx.fillStyle = '#e74c3c';
+    ctx.shadowColor = 'rgba(231,76,60,0.5)';
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.moveTo(btnNoRect.x + br, btnNoRect.y);
+    ctx.lineTo(btnNoRect.x + btnW - br, btnNoRect.y);
+    ctx.quadraticCurveTo(btnNoRect.x + btnW, btnNoRect.y, btnNoRect.x + btnW, btnNoRect.y + br);
+    ctx.lineTo(btnNoRect.x + btnW, btnNoRect.y + btnH - br);
+    ctx.quadraticCurveTo(btnNoRect.x + btnW, btnNoRect.y + btnH, btnNoRect.x + btnW - br, btnNoRect.y + btnH);
+    ctx.lineTo(btnNoRect.x + br, btnNoRect.y + btnH);
+    ctx.quadraticCurveTo(btnNoRect.x, btnNoRect.y + btnH, btnNoRect.x, btnNoRect.y + btnH - br);
+    ctx.lineTo(btnNoRect.x, btnNoRect.y + br);
+    ctx.quadraticCurveTo(btnNoRect.x, btnNoRect.y, btnNoRect.x + br, btnNoRect.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = '#fff';
+    ctx.fillText('Không 😅', noX, btnY);
+
+    ctx.globalAlpha = 1;
+}
+
+// ==================== QUESTION CLICK ====================
+function handleQuestionClick(mx, my) {
+    if (!showQuestion || questionAnswer !== null) return;
+
+    // Check "Có"
+    if (mx >= btnYesRect.x && mx <= btnYesRect.x + btnYesRect.w &&
+        my >= btnYesRect.y && my <= btnYesRect.y + btnYesRect.h) {
+        questionAnswer = 'yes';
+        // Transition to wheel
+        showQuestion = false;
+        showWheel = true;
+        wheelFadeIn = 0;
+        for (let i = 0; i < 4; i++) rockets.push(new Rocket());
+        return;
+    }
+
+    // Check "Không"
+    if (mx >= btnNoRect.x && mx <= btnNoRect.x + btnNoRect.w &&
+        my >= btnNoRect.y && my <= btnNoRect.y + btnNoRect.h) {
+        questionAnswer = 'no';
+        nitTimer = performance.now();
+        return;
+    }
 }
 
 // ==================== WHEEL ====================
@@ -532,21 +668,31 @@ function drawWheelResult() {
     ctx.restore();
 }
 
-// ==================== WHEEL CLICK ====================
+// ==================== CLICK HANDLERS ====================
 canvas.addEventListener('click', (e) => {
-    if (!showWheel) return;
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+
+    // Question phase click
+    if (showQuestion) { handleQuestionClick(mx, my); return; }
+
+    // Wheel click
+    if (!showWheel) return;
     const cx = W/2, cy = H/2;
     const dist = Math.sqrt((mx-cx)**2 + (my-cy)**2);
     if (wheelDone && !wheelSpinning) return;
     if (dist < Math.min(W*0.24, H*0.36)) spinWheel();
 });
 canvas.addEventListener('touchstart', (e) => {
-    if (!showWheel) return;
     const rect = canvas.getBoundingClientRect();
     const t = e.touches[0];
     const mx = t.clientX - rect.left, my = t.clientY - rect.top;
+
+    // Question phase touch
+    if (showQuestion) { handleQuestionClick(mx, my); return; }
+
+    // Wheel touch
+    if (!showWheel) return;
     const cx = W/2, cy = H/2;
     const dist = Math.sqrt((mx-cx)**2 + (my-cy)**2);
     if (wheelDone && !wheelSpinning) return;
@@ -603,6 +749,8 @@ function loop(timestamp) {
                 wheelResult = localStorage.getItem('lixi2026_result') || '???';
                 wheelResultTimer = performance.now();
             }
+        } else if (showQuestion) {
+            drawQuestion(timestamp);
         } else {
             switch (sceneState) {
                 case 'idle':
@@ -630,10 +778,10 @@ function loop(timestamp) {
                         dyingParticles = []; sceneState = 'idle'; stateStart = timestamp;
                     }
                     break;
-                case 'toWheel':
+                case 'toQuestion':
                     dyingParticles.forEach(p => p.updateExploding());
                     dyingParticles = dyingParticles.filter(p => p.alive);
-                    if (elapsed > 2000) { showWheel = true; dyingParticles = []; }
+                    if (elapsed > 2000) { showQuestion = true; dyingParticles = []; }
                     break;
             }
             ctx.globalCompositeOperation = 'lighter';
