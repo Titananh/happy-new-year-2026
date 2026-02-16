@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Happy New Year 2026</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -13,15 +13,120 @@
             user-select: none;
         }
         canvas { display: block; }
+
+        /* ===== ROTATE WARNING OVERLAY ===== */
+        #rotateOverlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: opacity 0.6s ease;
+        }
+        #rotateOverlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .rotate-icon {
+            width: 80px;
+            height: 130px;
+            border: 3px solid #ffd700;
+            border-radius: 12px;
+            position: relative;
+            animation: rotatePhone 2s ease-in-out infinite;
+            margin-bottom: 25px;
+        }
+        .rotate-icon::before {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            background: #ffd700;
+            border-radius: 2px;
+        }
+        .rotate-icon::after {
+            content: '↻';
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 30px;
+            color: #ffd700;
+        }
+        @keyframes rotatePhone {
+            0%, 30% { transform: rotate(0deg); }
+            50%, 80% { transform: rotate(90deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .rotate-text {
+            color: #ffd700;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: clamp(14px, 3.5vw, 22px);
+            text-align: center;
+            line-height: 1.6;
+            padding: 0 20px;
+        }
+
+        /* ===== PORTRAIT BLOCKER (always shows in portrait on mobile) ===== */
+        #portraitBlocker {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        #portraitBlocker .rotate-icon {
+            animation: rotatePhone 2s ease-in-out infinite;
+        }
+
+        @media screen and (orientation: portrait) and (max-width: 900px) {
+            #portraitBlocker {
+                display: flex !important;
+            }
+        }
+        @media screen and (orientation: landscape),
+               screen and (min-width: 901px) {
+            #portraitBlocker {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body>
+
+<!-- Initial 2-second warning -->
+<div id="rotateOverlay">
+    <div class="rotate-icon"></div>
+    <div class="rotate-text">
+        Vui lòng xoay ngang điện thoại<br>để có trải nghiệm tốt nhất
+    </div>
+</div>
+
+<!-- Persistent portrait blocker -->
+<div id="portraitBlocker">
+    <div class="rotate-icon"></div>
+    <div class="rotate-text">
+        Xoay ngang điện thoại<br>để tiếp tục xem
+    </div>
+</div>
 
 <canvas id="canvas"></canvas>
 
 <script>
 // ============================================================
 //  HAPPY NEW YEAR 2026 - PARTICLE TEXT + FIREWORKS
+//  Optimized for LANDSCAPE orientation
 // ============================================================
 
 const canvas = document.getElementById('canvas');
@@ -40,15 +145,15 @@ const MAX_PARTICLES = 4500;
 const PARTICLE_GAP = 3;
 
 const TEXT_SEQUENCE = [
-    { text: '3',                         hold: 1200, isCountdown: true },
-    { text: '2',                         hold: 1200, isCountdown: true },
-    { text: '1',                         hold: 1200, isCountdown: true },
-    { text: 'Happy New Year\n2026',      hold: 4500, isReveal: true },
-    { text: 'Sứt môi của anh💋',         hold: 3800 },
-    { text: 'Nhiều niềm vui\nvà hạnh phúc', hold: 3800 },
-    { text: 'Cảm ơn vì\nem đã đến',     hold: 3800 },
-    { text: 'Yêu thương và\nquan tâm anh', hold: 3800 },
-    { text: '♥ Chúc Mừng Năm Mới ♥',    hold: 5500, isFinal: true },
+    { text: '3',                              hold: 1200, isCountdown: true },
+    { text: '2',                              hold: 1200, isCountdown: true },
+    { text: '1',                              hold: 1200, isCountdown: true },
+    { text: 'Happy New Year 2026',            hold: 4500, isReveal: true },
+    { text: 'Sứt môi của anh💋',              hold: 3800 },
+    { text: 'Nhiều niềm vui và hạnh phúc',   hold: 3800 },
+    { text: 'Cảm ơn vì em đã đến',           hold: 3800 },
+    { text: 'Yêu thương và quan tâm anh',    hold: 3800 },
+    { text: '♥ Chúc Mừng Năm Mới ♥',         hold: 5500, isFinal: true },
 ];
 
 // ==================== COLOR UTILS ====================
@@ -158,7 +263,7 @@ class Particle {
     }
 }
 
-// ==================== TEXT-TO-PARTICLES ====================
+// ==================== TEXT-TO-PARTICLES (LANDSCAPE OPTIMIZED) ====================
 function getTextPixels(text) {
     const off = document.createElement('canvas');
     off.width = W;
@@ -169,14 +274,15 @@ function getTextPixels(text) {
     const maxLen = Math.max(...lines.map(l => l.length));
     let fontSize;
 
+    // Landscape: use width as main constraint, single line preferred
     if (maxLen <= 2) {
-        fontSize = Math.min(W * 0.42, H * 0.58);
+        fontSize = Math.min(W * 0.25, H * 0.65);
     } else if (lines.length === 1) {
-        fontSize = Math.min(W * 0.80 / (maxLen * 0.52), H * 0.22);
+        fontSize = Math.min(W * 0.85 / (maxLen * 0.55), H * 0.35);
     } else {
         fontSize = Math.min(
-            W * 0.80 / (maxLen * 0.52),
-            H * 0.50 / (lines.length * 1.3)
+            W * 0.85 / (maxLen * 0.55),
+            H * 0.60 / (lines.length * 1.3)
         );
     }
     fontSize = Math.max(fontSize, 20);
@@ -193,8 +299,8 @@ function getTextPixels(text) {
     const imgData = oc.getImageData(0, 0, W, H).data;
     const positions = [];
     let gap = PARTICLE_GAP;
-    if (W < 600) gap = 4;
-    if (W < 400) gap = 5;
+    if (H < 400) gap = 4;
+    if (H < 300) gap = 5;
 
     for (let y = 0; y < H; y += gap) {
         for (let x = 0; x < W; x += gap) {
@@ -291,7 +397,7 @@ class Spark {
 let rockets = [];
 let sparks  = [];
 let fwTimer = 0;
-let fwRate  = 800; // ms between launches
+let fwRate  = 800;
 
 function updateFireworks(dt) {
     fwTimer += dt;
@@ -439,7 +545,6 @@ function explodeScene() {
     dyingParticles = textParticles;
     dyingParticles.forEach(p => p.explode());
     textParticles = [];
-    // Extra fireworks on explode
     for (let i = 0; i < 2 + Math.floor(Math.random() * 3); i++) rockets.push(new Rocket());
 }
 
@@ -456,28 +561,23 @@ function loop(timestamp) {
 
     const elapsed = timestamp - stateStart;
 
-    // ---- Clear ----
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, W, H);
 
-    // ---- Stars ----
     drawStars(timestamp);
 
-    // ---- Fireworks ----
     updateFireworks(dt);
     ctx.globalCompositeOperation = 'lighter';
     drawFireworks();
 
-    // ---- Rings ----
     for (let i = rings.length - 1; i >= 0; i--) {
         rings[i].update();
         rings[i].draw();
         if (!rings[i].alive) rings.splice(i, 1);
     }
 
-    // ---- Scene state machine ----
     ctx.globalCompositeOperation = 'source-over';
 
     switch (sceneState) {
@@ -491,7 +591,6 @@ function loop(timestamp) {
                 if (p.formToTarget()) settled++;
             });
 
-            // Audio cues
             if (!beepPlayed) {
                 beepPlayed = true;
                 const entry = TEXT_SEQUENCE[sceneIndex];
@@ -531,14 +630,11 @@ function loop(timestamp) {
             break;
     }
 
-    // ---- Draw text particles ----
     ctx.globalCompositeOperation = 'lighter';
 
-    // Glow layer
     textParticles.forEach(p => p.drawGlow());
     textParticles.forEach(p => p.draw());
 
-    // Dying particles
     dyingParticles.forEach(p => {
         ctx.globalAlpha = p.alpha * 0.15;
         ctx.fillStyle = p.color;
@@ -548,19 +644,27 @@ function loop(timestamp) {
     });
     dyingParticles.forEach(p => p.draw());
 
-    // Reset
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
 }
 
-// ==================== START ====================
-initAudio();
-started = true;
-sceneState = 'idle';
-stateStart = performance.now();
-lastFrame = performance.now();
+// ==================== START WITH 2-SECOND ROTATE WARNING ====================
+const rotateOverlay = document.getElementById('rotateOverlay');
 
-// Enable audio on first tap (required by mobile browsers)
+// Show warning for 2 seconds, then start animation
+setTimeout(() => {
+    rotateOverlay.classList.add('hidden');
+    // Remove from DOM after fade
+    setTimeout(() => rotateOverlay.remove(), 600);
+
+    initAudio();
+    started = true;
+    sceneState = 'idle';
+    stateStart = performance.now();
+    lastFrame = performance.now();
+}, 2000);
+
+// Enable audio on first tap (mobile browsers require interaction)
 document.addEventListener('click', () => initAudio(), { once: true });
 document.addEventListener('touchstart', () => initAudio(), { once: true });
 
