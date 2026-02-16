@@ -95,6 +95,7 @@
     <div class="rotate-text">Xoay ngang điện thoại<br>để tiếp tục xem</div>
 </div>
 
+<audio id="bgMusic" src="music.mp3" loop preload="auto"></audio>
 <canvas id="canvas"></canvas>
 
 <script>
@@ -612,11 +613,18 @@ function loop(timestamp) {
 
 // ==================== START ====================
 const rotateOverlay = document.getElementById('rotateOverlay');
+const bgMusic = document.getElementById('bgMusic');
+bgMusic.volume = 0.5;
+
+function tryPlayMusic() {
+    bgMusic.play().catch(() => {});
+}
 
 setTimeout(() => {
     rotateOverlay.classList.add('hidden');
     setTimeout(() => rotateOverlay.remove(), 600);
     initAudio();
+    tryPlayMusic();
     resize();
     started = true;
     sceneState = 'idle';
@@ -624,8 +632,9 @@ setTimeout(() => {
     lastFrame = performance.now();
 }, 2000);
 
-document.addEventListener('click', () => initAudio(), { once: true });
-document.addEventListener('touchstart', () => initAudio(), { once: true });
+// Mobile browsers need user interaction to play audio
+document.addEventListener('click', () => { initAudio(); tryPlayMusic(); }, { once: true });
+document.addEventListener('touchstart', () => { initAudio(); tryPlayMusic(); }, { once: true });
 
 requestAnimationFrame(loop);
 </script>
