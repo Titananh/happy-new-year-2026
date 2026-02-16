@@ -619,7 +619,6 @@ function updateWheel(dt) {
             return;
         }
         wheelSpinning = false; wheelDone = true;
-        const idx = getWheelSegmentAtPointer();
         wheelResult = WHEEL_SEGMENTS[idx].label;
         localStorage.setItem('lixi2026_spun', 'true');
         localStorage.setItem('lixi2026_result', wheelResult);
