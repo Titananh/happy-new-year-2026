@@ -288,14 +288,17 @@ function drawWheel() {
         const ly = cy + Math.sin(midAngle) * radius * 0.65;
         ctx.save();
         ctx.translate(lx, ly);
-        // Flip text so it's always readable (not upside down)
-        let textAngle = midAngle + Math.PI / 2;
-        if (midAngle > 0 && midAngle < Math.PI) {
-            textAngle += Math.PI;
+        // Normalize angle to 0-2PI to check if text would be upside down
+        let normAngle = midAngle % (Math.PI * 2);
+        if (normAngle < 0) normAngle += Math.PI * 2;
+        // If segment is in bottom half (between PI/2 and 3PI/2), flip 180°
+        if (normAngle > Math.PI / 2 && normAngle < Math.PI * 3 / 2) {
+            ctx.rotate(midAngle - Math.PI / 2);
+        } else {
+            ctx.rotate(midAngle + Math.PI / 2);
         }
-        ctx.rotate(textAngle);
         ctx.fillStyle = '#fff';
-        ctx.font = `bold ${Math.round(Math.min(radius*0.16, 22))}px "Segoe UI",Arial,sans-serif`;
+        ctx.font = `bold ${Math.round(Math.min(radius*0.18, 24))}px "Segoe UI",Arial,sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.globalAlpha = wheelFadeIn;
