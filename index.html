@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy New Year 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            overflow: hidden;
+            cursor: default;
+            user-select: none;
+        }
+        canvas { display: block; }
+        #startOverlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            cursor: pointer;
+        }
+        #startOverlay .startBtn {
+            color: #ffd700;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: clamp(18px, 4vw, 32px);
+            text-align: center;
+            padding: 20px 50px;
+            border: 2px solid #ffd700;
+            border-radius: 12px;
+            transition: all 0.3s;
+            animation: pulse 2s infinite;
+        }
+        #startOverlay .startBtn:hover {
+            background: rgba(255,215,0,0.15);
+            transform: scale(1.05);
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="startOverlay">
+    <div class="startBtn">Click to Start</div>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<script>
+// ============================================================
+//  HAPPY NEW YEAR 2026 - PARTICLE TEXT + FIREWORKS
+// ============================================================
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ==================== CONFIGURATION ====================
+const MAX_PARTICLES = 4500;
+const PARTICLE_GAP = 3;
+
+const TEXT_SEQUENCE = [
+    { text: '3',                         hold: 1200, isCountdown: true },
+    { text: '2',                         hold: 1200, isCountdown: true },
+    { text: '1',                         hold: 1200, isCountdown: true },
+    { text: 'Happy New Year\n2026',      hold: 4500, isReveal: true },
+    { text: 'Sứt môi của anh💋',         hold: 3800 },
+    { text: 'Nhiều niềm vui\nvà hạnh phúc', hold: 3800 },
+    { text: 'Cảm ơn vì\nem đã đến',     hold: 3800 },
+    { text: 'Yêu thương và\nquan tâm anh', hold: 3800 },
+    { text: '♥ Chúc Mừng Năm Mới ♥',    hold: 5500, isFinal: true },
+];
+
+// ==================== COLOR UTILS ====================
+function randomParticleColor(isFinal) {
+    if (isFinal) {
+        const r = Math.random();
+        if (r < 0.5) return `hsl(350, ${85+Math.random()*15}%, ${55+Math.random()*15}%)`;
+        if (r < 0.75) return `hsl(${40+Math.random()*15}, 100%, ${65+Math.random()*15}%)`;
+        return `hsl(0, 0%, ${85+Math.random()*15}%)`;
+    }
+    const r = Math.random();
+    if (r < 0.40) return `hsl(0, 0%, ${82+Math.random()*18}%)`;
+    if (r < 0.65) return `hsl(${42+Math.random()*12}, 100%, ${62+Math.random()*18}%)`;
+    if (r < 0.75) return `hsl(350, ${80+Math.random()*20}%, ${50+Math.random()*20}%)`;
+    if (r < 0.83) return `hsl(${115+Math.random()*25}, ${65+Math.random()*30}%, ${50+Math.random()*20}%)`;
+    if (r < 0.90) return `hsl(${185+Math.random()*35}, ${75+Math.random()*25}%, ${50+Math.random()*20}%)`;
+    return `hsl(${Math.random()*360}, ${80+Math.random()*20}%, ${55+Math.random()*15}%)`;
+}
+
+function randomFireworkColor() {
+    const hues = [0, 30, 50, 120, 180, 210, 280, 330];
+    const hue = hues[Math.floor(Math.random() * hues.length)] + Math.random() * 20;
+    return `hsl(${hue}, ${85+Math.random()*15}%, ${55+Math.random()*20}%)`;
+}
+
+// ==================== PARTICLE CLASS ====================
+class Particle {
+    constructor(tx, ty, color) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * Math.max(W, H) * 0.7 + 100;
+        this.x = W / 2 + Math.cos(angle) * dist;
+        this.y = H / 2 + Math.sin(angle) * dist;
+        this.targetX = tx;
+        this.targetY = ty;
+        this.color = color;
+        this.baseSize = Math.random() * 1.4 + 0.7;
+        this.size = this.baseSize;
+        this.vx = 0;
+        this.vy = 0;
+        this.alpha = 0;
+        this.alive = true;
+        this.twinkleOff = Math.random() * Math.PI * 2;
+        this.twinkleSpd = 1.5 + Math.random() * 3;
+    }
+
+    formToTarget() {
+        this.alpha = Math.min(1, this.alpha + 0.025);
+        const dx = this.targetX - this.x;
+        const dy = this.targetY - this.y;
+        this.vx += dx * 0.065;
+        this.vy += dy * 0.065;
+        this.vx *= 0.86;
+        this.vy *= 0.86;
+        this.x += this.vx;
+        this.y += this.vy;
+        return Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5;
+    }
+
+    holdPosition(t) {
+        this.vx += (this.targetX - this.x) * 0.12;
+        this.vy += (this.targetY - this.y) * 0.12;
+        this.vx *= 0.78;
+        this.vy *= 0.78;
+        this.vx += (Math.random() - 0.5) * 0.15;
+        this.vy += (Math.random() - 0.5) * 0.15;
+        this.x += this.vx;
+        this.y += this.vy;
+        const tw = Math.sin(t * 0.002 * this.twinkleSpd + this.twinkleOff);
+        this.size = this.baseSize * (0.75 + tw * 0.35);
+        this.alpha = 0.7 + tw * 0.3;
+    }
+
+    explode() {
+        const angle = Math.random() * Math.PI * 2;
+        const force = 2.5 + Math.random() * 13;
+        this.vx = Math.cos(angle) * force;
+        this.vy = Math.sin(angle) * force;
+    }
+
+    updateExploding() {
+        this.vx *= 0.965;
+        this.vy *= 0.965;
+        this.vy += 0.04;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= 0.016;
+        this.size *= 0.993;
+        if (this.alpha <= 0) this.alive = false;
+    }
+
+    draw() {
+        if (!this.alive || this.alpha <= 0) return;
+        ctx.globalAlpha = this.alpha * 0.4;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    drawGlow() {
+        if (!this.alive || this.alpha <= 0) return;
+        ctx.globalAlpha = this.alpha * 0.12;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * 3.5, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// ==================== TEXT-TO-PARTICLES ====================
+function getTextPixels(text) {
+    const off = document.createElement('canvas');
+    off.width = W;
+    off.height = H;
+    const oc = off.getContext('2d');
+
+    const lines = text.split('\n');
+    const maxLen = Math.max(...lines.map(l => l.length));
+    let fontSize;
+
+    if (maxLen <= 2) {
+        fontSize = Math.min(W * 0.42, H * 0.58);
+    } else if (lines.length === 1) {
+        fontSize = Math.min(W * 0.80 / (maxLen * 0.52), H * 0.22);
+    } else {
+        fontSize = Math.min(
+            W * 0.80 / (maxLen * 0.52),
+            H * 0.50 / (lines.length * 1.3)
+        );
+    }
+    fontSize = Math.max(fontSize, 20);
+
+    oc.fillStyle = '#fff';
+    oc.font = `bold ${Math.round(fontSize)}px "Segoe UI", "Helvetica Neue", Arial, sans-serif`;
+    oc.textAlign = 'center';
+    oc.textBaseline = 'middle';
+
+    const lh = fontSize * 1.35;
+    const startY = H / 2 - ((lines.length - 1) * lh) / 2;
+    lines.forEach((line, i) => oc.fillText(line, W / 2, startY + i * lh));
+
+    const imgData = oc.getImageData(0, 0, W, H).data;
+    const positions = [];
+    let gap = PARTICLE_GAP;
+    if (W < 600) gap = 4;
+    if (W < 400) gap = 5;
+
+    for (let y = 0; y < H; y += gap) {
+        for (let x = 0; x < W; x += gap) {
+            if (imgData[(y * W + x) * 4 + 3] > 128) {
+                positions.push({ x, y });
+            }
+        }
+    }
+
+    if (positions.length > MAX_PARTICLES) {
+        for (let i = positions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [positions[i], positions[j]] = [positions[j], positions[i]];
+        }
+        positions.length = MAX_PARTICLES;
+    }
+    return positions;
+}
+
+// ==================== FIREWORK SYSTEM ====================
+class Rocket {
+    constructor() {
+        this.x = Math.random() * W;
+        this.y = H + 10;
+        this.targetY = H * (0.08 + Math.random() * 0.38);
+        this.vx = (Math.random() - 0.5) * 3;
+        this.vy = -(7 + Math.random() * 5);
+        this.color = randomFireworkColor();
+        this.alive = true;
+        this.trail = [];
+    }
+    update() {
+        this.trail.push({ x: this.x, y: this.y, a: 0.7 });
+        if (this.trail.length > 8) this.trail.shift();
+        this.trail.forEach(t => t.a *= 0.78);
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.11;
+        if (this.vy > -0.5 || this.y <= this.targetY) {
+            this.alive = false;
+            return true;
+        }
+        return false;
+    }
+    draw() {
+        this.trail.forEach(t => {
+            ctx.globalAlpha = t.a;
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.arc(t.x, t.y, 1.2, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+class Spark {
+    constructor(x, y, color) {
+        this.x = x; this.y = y;
+        this.color = color;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.8 + Math.random() * 5;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.alpha = 1;
+        this.size = 0.4 + Math.random() * 1.6;
+        this.alive = true;
+        this.gravity = 0.035;
+        this.friction = 0.974;
+    }
+    update() {
+        this.vx *= this.friction;
+        this.vy *= this.friction;
+        this.vy += this.gravity;
+        this.x += this.vx;
+        this.y += this.vy;
+        this.alpha -= 0.009;
+        if (this.alpha <= 0) this.alive = false;
+    }
+    draw() {
+        if (!this.alive) return;
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+let rockets = [];
+let sparks  = [];
+let fwTimer = 0;
+let fwRate  = 800; // ms between launches
+
+function updateFireworks(dt) {
+    fwTimer += dt;
+    if (fwTimer > fwRate) {
+        rockets.push(new Rocket());
+        if (Math.random() > 0.55) rockets.push(new Rocket());
+        fwTimer = 0;
+        fwRate = 500 + Math.random() * 900;
+    }
+    for (let i = rockets.length - 1; i >= 0; i--) {
+        const boom = rockets[i].update();
+        if (boom) {
+            const r = rockets[i];
+            const n = 45 + Math.floor(Math.random() * 55);
+            for (let j = 0; j < n; j++) sparks.push(new Spark(r.x, r.y, r.color));
+            rockets.splice(i, 1);
+        } else if (!rockets[i].alive) {
+            rockets.splice(i, 1);
+        }
+    }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+        sparks[i].update();
+        if (!sparks[i].alive) sparks.splice(i, 1);
+    }
+}
+
+function drawFireworks() {
+    rockets.forEach(r => r.draw());
+    sparks.forEach(s => s.draw());
+}
+
+// ==================== SHOCKWAVE RING ====================
+let rings = [];
+class Ring {
+    constructor(x, y, color) {
+        this.x = x; this.y = y;
+        this.radius = 0;
+        this.maxRadius = Math.max(W, H) * 0.45;
+        this.alpha = 0.7;
+        this.color = color || '#ffd700';
+        this.alive = true;
+    }
+    update() {
+        this.radius += (this.maxRadius - this.radius) * 0.04 + 2;
+        this.alpha -= 0.012;
+        if (this.alpha <= 0) this.alive = false;
+    }
+    draw() {
+        if (!this.alive) return;
+        ctx.globalAlpha = this.alpha;
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.stroke();
+    }
+}
+
+// ==================== BACKGROUND STARS ====================
+const stars = [];
+for (let i = 0; i < 120; i++) {
+    stars.push({
+        x: Math.random() * 3000,
+        y: Math.random() * 2000,
+        size: Math.random() * 1.2 + 0.3,
+        twinkle: Math.random() * Math.PI * 2,
+        speed: 0.5 + Math.random() * 2
+    });
+}
+
+function drawStars(t) {
+    stars.forEach(s => {
+        const sx = s.x % W;
+        const sy = s.y % H;
+        const a = 0.3 + 0.3 * Math.sin(t * 0.001 * s.speed + s.twinkle);
+        ctx.globalAlpha = a;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.arc(sx, sy, s.size, 0, Math.PI * 2);
+        ctx.fill();
+    });
+}
+
+// ==================== AUDIO ====================
+let audioCtx = null;
+
+function initAudio() {
+    if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch(e) {}
+    }
+}
+
+function playTone(freq, dur, type = 'sine', vol = 0.12) {
+    if (!audioCtx) return;
+    try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = freq;
+        osc.type = type;
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        osc.start();
+        osc.stop(audioCtx.currentTime + dur);
+    } catch(e) {}
+}
+
+function playCountdownBeep() {
+    playTone(523, 0.25, 'triangle', 0.15);
+}
+
+function playRevealChime() {
+    playTone(784, 0.15, 'sine', 0.12);
+    setTimeout(() => playTone(988, 0.15, 'sine', 0.12), 100);
+    setTimeout(() => playTone(1318, 0.4, 'sine', 0.15), 200);
+}
+
+// ==================== SCENE MANAGER ====================
+let textParticles  = [];
+let dyingParticles = [];
+let sceneIndex     = -1;
+let sceneState     = 'idle';
+let stateStart     = 0;
+let started        = false;
+let beepPlayed     = false;
+
+function advanceScene() {
+    sceneIndex++;
+    if (sceneIndex >= TEXT_SEQUENCE.length) sceneIndex = 0;
+
+    const entry = TEXT_SEQUENCE[sceneIndex];
+    const isFin = !!entry.isFinal;
+    const positions = getTextPixels(entry.text);
+    textParticles = positions.map(p => new Particle(p.x, p.y, randomParticleColor(isFin)));
+    sceneState = 'forming';
+    stateStart = performance.now();
+    beepPlayed = false;
+}
+
+function explodeScene() {
+    sceneState = 'exploding';
+    stateStart = performance.now();
+    dyingParticles = textParticles;
+    dyingParticles.forEach(p => p.explode());
+    textParticles = [];
+    // Extra fireworks on explode
+    for (let i = 0; i < 2 + Math.floor(Math.random() * 3); i++) rockets.push(new Rocket());
+}
+
+// ==================== MAIN LOOP ====================
+let lastFrame = 0;
+
+function loop(timestamp) {
+    requestAnimationFrame(loop);
+    if (!started) return;
+
+    const dt = timestamp - lastFrame;
+    lastFrame = timestamp;
+    if (dt > 150) return;
+
+    const elapsed = timestamp - stateStart;
+
+    // ---- Clear ----
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+
+    // ---- Stars ----
+    drawStars(timestamp);
+
+    // ---- Fireworks ----
+    updateFireworks(dt);
+    ctx.globalCompositeOperation = 'lighter';
+    drawFireworks();
+
+    // ---- Rings ----
+    for (let i = rings.length - 1; i >= 0; i--) {
+        rings[i].update();
+        rings[i].draw();
+        if (!rings[i].alive) rings.splice(i, 1);
+    }
+
+    // ---- Scene state machine ----
+    ctx.globalCompositeOperation = 'source-over';
+
+    switch (sceneState) {
+        case 'idle':
+            if (elapsed > 600) advanceScene();
+            break;
+
+        case 'forming': {
+            let settled = 0;
+            textParticles.forEach(p => {
+                if (p.formToTarget()) settled++;
+            });
+
+            // Audio cues
+            if (!beepPlayed) {
+                beepPlayed = true;
+                const entry = TEXT_SEQUENCE[sceneIndex];
+                if (entry.isCountdown) playCountdownBeep();
+            }
+
+            if (elapsed > 1600 || settled > textParticles.length * 0.92) {
+                sceneState = 'holding';
+                stateStart = timestamp;
+
+                const entry = TEXT_SEQUENCE[sceneIndex];
+                if (entry.isReveal) {
+                    playRevealChime();
+                    for (let i = 0; i < 6; i++) rockets.push(new Rocket());
+                    rings.push(new Ring(W/2, H/2, '#ffd700'));
+                    rings.push(new Ring(W/2, H/2, '#ffffff'));
+                }
+            }
+            break;
+        }
+
+        case 'holding':
+            textParticles.forEach(p => p.holdPosition(timestamp));
+            if (elapsed > TEXT_SEQUENCE[sceneIndex].hold) {
+                explodeScene();
+            }
+            break;
+
+        case 'exploding':
+            dyingParticles.forEach(p => p.updateExploding());
+            dyingParticles = dyingParticles.filter(p => p.alive);
+            if (elapsed > 1800 || dyingParticles.length === 0) {
+                dyingParticles = [];
+                sceneState = 'idle';
+                stateStart = timestamp;
+            }
+            break;
+    }
+
+    // ---- Draw text particles ----
+    ctx.globalCompositeOperation = 'lighter';
+
+    // Glow layer
+    textParticles.forEach(p => p.drawGlow());
+    textParticles.forEach(p => p.draw());
+
+    // Dying particles
+    dyingParticles.forEach(p => {
+        ctx.globalAlpha = p.alpha * 0.15;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 2.5, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    dyingParticles.forEach(p => p.draw());
+
+    // Reset
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+}
+
+// ==================== START ====================
+const overlay = document.getElementById('startOverlay');
+overlay.addEventListener('click', () => {
+    overlay.style.display = 'none';
+    initAudio();
+    started = true;
+    sceneState = 'idle';
+    stateStart = performance.now();
+    lastFrame = performance.now();
+});
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
