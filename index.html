@@ -52,6 +52,43 @@
         @media screen and (orientation: landscape), screen and (min-width: 901px) {
             #portraitBlocker { display: none !important; }
         }
+        /* ===== COUNTDOWN ===== */
+        #countdown {
+            position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
+            z-index: 10; display: none; text-align: center;
+            background: rgba(10,10,30,0.75); border: 1px solid rgba(255,215,0,0.5);
+            border-radius: 12px; padding: 6px 20px;
+            backdrop-filter: blur(6px);
+        }
+        #countdown.visible { display: block; }
+        .cd-label {
+            color: #ffd700; font-family: 'Segoe UI',Arial,sans-serif;
+            font-size: clamp(9px, 1.8vw, 14px); margin-bottom: 2px;
+            text-shadow: 0 0 8px rgba(255,215,0,0.4);
+        }
+        .cd-timer { display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .cd-unit { display: flex; flex-direction: column; align-items: center; min-width: 36px; }
+        .cd-unit span {
+            color: #fff; font-family: 'Segoe UI',Arial,sans-serif;
+            font-size: clamp(18px, 3.5vw, 32px); font-weight: bold;
+            text-shadow: 0 0 12px rgba(255,215,0,0.6);
+        }
+        .cd-unit small {
+            color: #ffd700; font-family: 'Segoe UI',Arial,sans-serif;
+            font-size: clamp(7px, 1.2vw, 11px); text-transform: uppercase;
+            opacity: 0.8;
+        }
+        .cd-sep {
+            color: #ffd700; font-size: clamp(16px, 3vw, 28px); font-weight: bold;
+            margin: 0 2px; padding-bottom: 12px;
+            animation: cdBlink 1s step-end infinite;
+        }
+        @keyframes cdBlink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+        .cd-done {
+            color: #ff1744; font-family: 'Segoe UI',Arial,sans-serif;
+            font-size: clamp(14px, 2.5vw, 22px); font-weight: bold;
+            text-shadow: 0 0 12px rgba(255,23,68,0.6);
+        }
     </style>
 </head>
 <body>
@@ -67,6 +104,11 @@
 
 <audio id="bgMusic" src="music.mp3" loop preload="auto"></audio>
 <canvas id="canvas"></canvas>
+
+<div id="countdown">
+    <div class="cd-label">⏰ Đếm ngược đến Giao Thừa Tết Bính Ngọ 2026 ⏰</div>
+    <div class="cd-timer" id="cdTimer"></div>
+</div>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -507,7 +549,43 @@ canvas.addEventListener('touchstart', (e) => {
 let lastFrame = 0;
 
 function loop(timestamp) {
-    requestAnimationFrame(loop);
+// ==================== COUNTDOWN TO TẾT ====================
+// Giao Thừa Tết Âm Lịch 2026 = midnight 17/02/2026 Vietnam time (UTC+7)
+const TET_TARGET = new Date('2026-02-17T00:00:00+07:00').getTime();
+
+function updateCountdown() {
+    const cdTimer = document.getElementById('cdTimer');
+    const now = Date.now();
+    const diff = TET_TARGET - now;
+
+    if (diff <= 0) {
+        cdTimer.innerHTML = '<span class="cd-done">🎆 CHÚC MỪNG NĂM MỚI 2026! 🎆</span>';
+        return;
+    }
+
+    const days = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    const secs = Math.floor((diff % 60000) / 1000);
+
+    const pad = n => String(n).padStart(2, '0');
+
+    cdTimer.innerHTML =
+        `<div class="cd-unit"><span>${days}</span><small>ngày</small></div>` +
+        `<span class="cd-sep">:</span>` +
+        `<div class="cd-unit"><span>${pad(hours)}</span><small>giờ</small></div>` +
+        `<span class="cd-sep">:</span>` +
+        `<div class="cd-unit"><span>${pad(mins)}</span><small>phút</small></div>` +
+        `<span class="cd-sep">:</span>` +
+        `<div class="cd-unit"><span>${pad(secs)}</span><small>giây</small></div>`;
+}
+
+function startCountdown() {
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+}
+
+requestAnimationFrame(loop);
     if (!started) return;
     const dt = timestamp - lastFrame; lastFrame = timestamp;
     if (dt > 150) return;
@@ -605,6 +683,8 @@ setTimeout(() => {
     initAudio(); tryPlayMusic(); resize();
     started = true; sceneState = 'idle';
     stateStart = performance.now(); lastFrame = performance.now();
+    document.getElementById('countdown').classList.add('visible');
+    startCountdown();
 }, 2000);
 
 document.addEventListener('click', () => { initAudio(); tryPlayMusic(); }, { once: true });
