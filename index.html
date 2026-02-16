@@ -6,51 +6,29 @@
     <title>Happy New Year 2026</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: #000;
-            overflow: hidden;
-            cursor: default;
-            user-select: none;
-        }
+        body { background: #000; overflow: hidden; cursor: default; user-select: none; }
         canvas { display: block; width: 100vw; height: 100vh; }
 
-        /* ===== ROTATE WARNING OVERLAY ===== */
         #rotateOverlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 100;
             transition: opacity 0.6s ease;
         }
-        #rotateOverlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
+        #rotateOverlay.hidden { opacity: 0; pointer-events: none; }
         .rotate-icon {
-            width: 80px; height: 130px;
-            border: 3px solid #ffd700;
-            border-radius: 12px;
-            position: relative;
-            animation: rotatePhone 2s ease-in-out infinite;
-            margin-bottom: 25px;
+            width: 80px; height: 130px; border: 3px solid #ffd700;
+            border-radius: 12px; position: relative;
+            animation: rotatePhone 2s ease-in-out infinite; margin-bottom: 25px;
         }
         .rotate-icon::before {
-            content: '';
-            position: absolute; bottom: 8px; left: 50%;
-            transform: translateX(-50%);
-            width: 20px; height: 3px;
+            content: ''; position: absolute; bottom: 8px; left: 50%;
+            transform: translateX(-50%); width: 20px; height: 3px;
             background: #ffd700; border-radius: 2px;
         }
         .rotate-icon::after {
-            content: '\21BB';
-            position: absolute; top: -40px; left: 50%;
-            transform: translateX(-50%);
-            font-size: 30px; color: #ffd700;
+            content: '\21BB'; position: absolute; top: -40px; left: 50%;
+            transform: translateX(-50%); font-size: 30px; color: #ffd700;
         }
         @keyframes rotatePhone {
             0%, 30% { transform: rotate(0deg); }
@@ -58,22 +36,15 @@
             100% { transform: rotate(0deg); }
         }
         .rotate-text {
-            color: #ffd700;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: clamp(14px, 3.5vw, 22px);
-            text-align: center; line-height: 1.6; padding: 0 20px;
+            color: #ffd700; font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: clamp(14px, 3.5vw, 22px); text-align: center;
+            line-height: 1.6; padding: 0 20px;
         }
 
-        /* ===== PORTRAIT BLOCKER ===== */
         #portraitBlocker {
-            position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: none; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 50;
         }
         @media screen and (orientation: portrait) and (max-width: 900px) {
             #portraitBlocker { display: flex !important; }
@@ -89,7 +60,6 @@
     <div class="rotate-icon"></div>
     <div class="rotate-text">Vui lòng xoay ngang điện thoại<br>và bật loa to lên nhé 🔊</div>
 </div>
-
 <div id="portraitBlocker">
     <div class="rotate-icon"></div>
     <div class="rotate-text">Xoay ngang điện thoại<br>để tiếp tục xem</div>
@@ -99,421 +69,442 @@
 <canvas id="canvas"></canvas>
 
 <script>
-// ============================================================
-//  HAPPY NEW YEAR 2026 - PARTICLE TEXT + FIREWORKS
-//  Fixed for mobile High-DPI screens
-// ============================================================
-
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 let W, H, DPR;
 
 function resize() {
     DPR = window.devicePixelRatio || 1;
-    W = window.innerWidth;
-    H = window.innerHeight;
-    canvas.width = W * DPR;
-    canvas.height = H * DPR;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 }
-window.addEventListener('resize', () => { resize(); });
+window.addEventListener('resize', resize);
 resize();
 
-// ==================== CONFIGURATION ====================
+// ==================== CONFIG ====================
 const MAX_PARTICLES = 8000;
-
 const TEXT_SEQUENCE = [
-    { text: '3',                            hold: 1200, isCountdown: true },
-    { text: '2',                            hold: 1200, isCountdown: true },
-    { text: '1',                            hold: 1200, isCountdown: true },
-    { text: 'Happy New Year\n2026',         hold: 4500, isReveal: true },
-    { text: 'Sứt môi của anh💋',            hold: 3800 },
+    { text: '3', hold: 1200, isCountdown: true },
+    { text: '2', hold: 1200, isCountdown: true },
+    { text: '1', hold: 1200, isCountdown: true },
+    { text: 'Happy New Year\n2026', hold: 4500, isReveal: true },
+    { text: 'Sứt môi của anh💋', hold: 3800 },
     { text: 'Nhiều niềm vui\nvà hạnh phúc', hold: 3800 },
-    { text: 'Cảm ơn vì\nem đã đến',        hold: 3800 },
-    { text: 'Yêu thương và\nquan tâm anh',  hold: 3800 },
-    { text: '♥ Chúc Mừng Năm Mới ♥',       hold: 5500, isFinal: true },
+    { text: 'Cảm ơn vì\nem đã đến', hold: 3800 },
+    { text: 'Yêu thương và\nquan tâm anh', hold: 3800 },
+    { text: '♥ Chúc Mừng Năm Mới ♥', hold: 5500, isFinal: true },
 ];
 
-// ==================== COLOR UTILS ====================
-function randomParticleColor(isFinal) {
-    if (isFinal) {
-        const r = Math.random();
-        if (r < 0.5) return `hsl(350, ${85+Math.random()*15}%, ${60+Math.random()*15}%)`;
-        if (r < 0.75) return `hsl(${40+Math.random()*15}, 100%, ${68+Math.random()*15}%)`;
-        return `hsl(0, 0%, ${88+Math.random()*12}%)`;
-    }
-    const r = Math.random();
-    if (r < 0.50) return `hsl(0, 0%, ${88+Math.random()*12}%)`;
-    if (r < 0.72) return `hsl(${42+Math.random()*12}, 100%, ${68+Math.random()*15}%)`;
-    if (r < 0.82) return `hsl(350, ${80+Math.random()*20}%, ${55+Math.random()*20}%)`;
-    if (r < 0.90) return `hsl(${115+Math.random()*25}, ${65+Math.random()*30}%, ${55+Math.random()*20}%)`;
-    return `hsl(${185+Math.random()*35}, ${75+Math.random()*25}%, ${55+Math.random()*20}%)`;
-}
+// ==================== WHEEL CONFIG ====================
+const WHEEL_SEGMENTS = [
+    { label: '10K',  color: '#e74c3c', value: 10000 },
+    { label: '50K',  color: '#f39c12', value: 50000 },
+    { label: '20K',  color: '#2ecc71', value: 20000 },
+    { label: '100K', color: '#9b59b6', value: 100000 },
+    { label: '10K',  color: '#e67e22', value: 10000 },
+    { label: '50K',  color: '#1abc9c', value: 50000 },
+    { label: '20K',  color: '#3498db', value: 20000 },
+    { label: '200K', color: '#ff1744', value: 200000 },
+];
+const SEGMENT_COUNT = WHEEL_SEGMENTS.length;
+const ARC = (Math.PI * 2) / SEGMENT_COUNT;
 
+let wheelAngle = 0;
+let wheelSpinning = false;
+let wheelSpinSpeed = 0;
+let wheelResult = null;
+let wheelDone = false;
+let showWheel = false;
+let wheelFadeIn = 0;
+let wheelConfetti = [];
+let wheelResultTimer = 0;
+
+// ==================== COLORS ====================
+function randomParticleColor(f) {
+    if (f) { const r=Math.random(); if(r<0.5)return`hsl(350,${85+Math.random()*15}%,${60+Math.random()*15}%)`;if(r<0.75)return`hsl(${40+Math.random()*15},100%,${68+Math.random()*15}%)`;return`hsl(0,0%,${88+Math.random()*12}%)`; }
+    const r=Math.random(); if(r<0.50)return`hsl(0,0%,${88+Math.random()*12}%)`;if(r<0.72)return`hsl(${42+Math.random()*12},100%,${68+Math.random()*15}%)`;if(r<0.82)return`hsl(350,${80+Math.random()*20}%,${55+Math.random()*20}%)`;if(r<0.90)return`hsl(${115+Math.random()*25},${65+Math.random()*30}%,${55+Math.random()*20}%)`;return`hsl(${185+Math.random()*35},${75+Math.random()*25}%,${55+Math.random()*20}%)`;
+}
 function randomFireworkColor() {
-    const hues = [0, 30, 50, 120, 180, 210, 280, 330];
-    const hue = hues[Math.floor(Math.random() * hues.length)] + Math.random() * 20;
-    return `hsl(${hue}, ${90+Math.random()*10}%, ${60+Math.random()*20}%)`;
+    const h=[0,30,50,120,180,210,280,330]; return`hsl(${h[Math.floor(Math.random()*h.length)]+Math.random()*20},${90+Math.random()*10}%,${60+Math.random()*20}%)`;
 }
 
-// ==================== PARTICLE CLASS ====================
+// ==================== PARTICLE ====================
 class Particle {
     constructor(tx, ty, color) {
-        const angle = Math.random() * Math.PI * 2;
-        const dist = Math.random() * Math.max(W, H) * 0.6 + 80;
-        this.x = W / 2 + Math.cos(angle) * dist;
-        this.y = H / 2 + Math.sin(angle) * dist;
-        this.targetX = tx;
-        this.targetY = ty;
-        this.color = color;
-        this.baseSize = Math.random() * 1.5 + 1.5;
-        this.size = this.baseSize;
-        this.vx = 0;
-        this.vy = 0;
-        this.alpha = 0;
-        this.alive = true;
-        this.twinkleOff = Math.random() * Math.PI * 2;
-        this.twinkleSpd = 1.5 + Math.random() * 3;
+        const a=Math.random()*Math.PI*2, d=Math.random()*Math.max(W,H)*0.6+80;
+        this.x=W/2+Math.cos(a)*d; this.y=H/2+Math.sin(a)*d;
+        this.targetX=tx; this.targetY=ty; this.color=color;
+        this.baseSize=Math.random()*1.5+1.5; this.size=this.baseSize;
+        this.vx=0; this.vy=0; this.alpha=0; this.alive=true;
+        this.twinkleOff=Math.random()*Math.PI*2; this.twinkleSpd=1.5+Math.random()*3;
     }
-
     formToTarget() {
-        this.alpha = Math.min(1, this.alpha + 0.045);
-        const dx = this.targetX - this.x;
-        const dy = this.targetY - this.y;
-        this.vx += dx * 0.065;
-        this.vy += dy * 0.065;
-        this.vx *= 0.86;
-        this.vy *= 0.86;
-        this.x += this.vx;
-        this.y += this.vy;
-        return Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5;
+        this.alpha=Math.min(1,this.alpha+0.045);
+        const dx=this.targetX-this.x, dy=this.targetY-this.y;
+        this.vx+=dx*0.065; this.vy+=dy*0.065; this.vx*=0.86; this.vy*=0.86;
+        this.x+=this.vx; this.y+=this.vy;
+        return Math.abs(dx)<0.5&&Math.abs(dy)<0.5;
     }
-
     holdPosition(t) {
-        this.vx += (this.targetX - this.x) * 0.12;
-        this.vy += (this.targetY - this.y) * 0.12;
-        this.vx *= 0.78;
-        this.vy *= 0.78;
-        this.vx += (Math.random() - 0.5) * 0.12;
-        this.vy += (Math.random() - 0.5) * 0.12;
-        this.x += this.vx;
-        this.y += this.vy;
-        const tw = Math.sin(t * 0.002 * this.twinkleSpd + this.twinkleOff);
-        this.size = this.baseSize * (0.85 + tw * 0.2);
-        this.alpha = 0.9 + tw * 0.1;
+        this.vx+=(this.targetX-this.x)*0.12; this.vy+=(this.targetY-this.y)*0.12;
+        this.vx*=0.78; this.vy*=0.78;
+        this.vx+=(Math.random()-0.5)*0.12; this.vy+=(Math.random()-0.5)*0.12;
+        this.x+=this.vx; this.y+=this.vy;
+        const tw=Math.sin(t*0.002*this.twinkleSpd+this.twinkleOff);
+        this.size=this.baseSize*(0.85+tw*0.2); this.alpha=0.9+tw*0.1;
     }
-
-    explode() {
-        const angle = Math.random() * Math.PI * 2;
-        const force = 2.5 + Math.random() * 13;
-        this.vx = Math.cos(angle) * force;
-        this.vy = Math.sin(angle) * force;
-    }
-
+    explode() { const a=Math.random()*Math.PI*2,f=2.5+Math.random()*13; this.vx=Math.cos(a)*f; this.vy=Math.sin(a)*f; }
     updateExploding() {
-        this.vx *= 0.965;
-        this.vy *= 0.965;
-        this.vy += 0.04;
-        this.x += this.vx;
-        this.y += this.vy;
-        this.alpha -= 0.016;
-        this.size *= 0.993;
-        if (this.alpha <= 0) this.alive = false;
+        this.vx*=0.965; this.vy*=0.965; this.vy+=0.04;
+        this.x+=this.vx; this.y+=this.vy; this.alpha-=0.016; this.size*=0.993;
+        if(this.alpha<=0) this.alive=false;
     }
-
-    draw() {
-        if (!this.alive || this.alpha <= 0) return;
-        // Bright core
-        ctx.globalAlpha = this.alpha;
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    drawGlow() {
-        if (!this.alive || this.alpha <= 0) return;
-        ctx.globalAlpha = this.alpha * 0.35;
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size * 2.5, 0, Math.PI * 2);
-        ctx.fill();
-    }
+    draw() { if(!this.alive||this.alpha<=0)return; ctx.globalAlpha=this.alpha; ctx.fillStyle=this.color; ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); }
+    drawGlow() { if(!this.alive||this.alpha<=0)return; ctx.globalAlpha=this.alpha*0.35; ctx.fillStyle=this.color; ctx.beginPath(); ctx.arc(this.x,this.y,this.size*2.5,0,Math.PI*2); ctx.fill(); }
 }
 
-// ==================== TEXT-TO-PARTICLES ====================
+// ==================== TEXT PIXELS ====================
 function getTextPixels(text) {
-    const off = document.createElement('canvas');
-    const oDPR = DPR;
-    off.width = W * oDPR;
-    off.height = H * oDPR;
-    const oc = off.getContext('2d');
-    oc.setTransform(oDPR, 0, 0, oDPR, 0, 0);
-
-    const lines = text.split('\n');
-    const maxLen = Math.max(...lines.map(l => l.length));
-    let fontSize;
-
-    if (maxLen <= 2) {
-        fontSize = Math.min(W * 0.28, H * 0.7);
-    } else if (lines.length === 1) {
-        fontSize = Math.min(W * 0.88 / (maxLen * 0.55), H * 0.42);
-    } else {
-        fontSize = Math.min(
-            W * 0.88 / (maxLen * 0.55),
-            H * 0.65 / (lines.length * 1.3)
-        );
-    }
-    fontSize = Math.max(fontSize, 28);
-
-    oc.fillStyle = '#fff';
-    oc.font = `bold ${Math.round(fontSize)}px "Segoe UI", "Helvetica Neue", Arial, sans-serif`;
-    oc.textAlign = 'center';
-    oc.textBaseline = 'middle';
-
-    const lh = fontSize * 1.3;
-    const startY = H / 2 - ((lines.length - 1) * lh) / 2;
-    lines.forEach((line, i) => oc.fillText(line, W / 2, startY + i * lh));
-
-    // Sample at CSS pixel coordinates
-    const imgData = oc.getImageData(0, 0, off.width, off.height).data;
-    const positions = [];
-    const gap = 3;
-    const imgW = off.width;
-
-    for (let y = 0; y < H; y += gap) {
-        for (let x = 0; x < W; x += gap) {
-            const px = Math.round(x * oDPR);
-            const py = Math.round(y * oDPR);
-            const idx = (py * imgW + px) * 4 + 3;
-            if (imgData[idx] > 100) {
-                positions.push({ x, y });
-            }
-        }
-    }
-
-    if (positions.length > MAX_PARTICLES) {
-        for (let i = positions.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [positions[i], positions[j]] = [positions[j], positions[i]];
-        }
-        positions.length = MAX_PARTICLES;
-    }
-    return positions;
+    const off=document.createElement('canvas'); off.width=W*DPR; off.height=H*DPR;
+    const oc=off.getContext('2d'); oc.setTransform(DPR,0,0,DPR,0,0);
+    const lines=text.split('\n'), maxLen=Math.max(...lines.map(l=>l.length));
+    let fs; if(maxLen<=2) fs=Math.min(W*0.28,H*0.7); else if(lines.length===1) fs=Math.min(W*0.88/(maxLen*0.55),H*0.42); else fs=Math.min(W*0.88/(maxLen*0.55),H*0.65/(lines.length*1.3));
+    fs=Math.max(fs,28);
+    oc.fillStyle='#fff'; oc.font=`bold ${Math.round(fs)}px "Segoe UI","Helvetica Neue",Arial,sans-serif`;
+    oc.textAlign='center'; oc.textBaseline='middle';
+    const lh=fs*1.3, sy=H/2-((lines.length-1)*lh)/2;
+    lines.forEach((l,i)=>oc.fillText(l,W/2,sy+i*lh));
+    const img=oc.getImageData(0,0,off.width,off.height).data, pos=[], gap=3, iw=off.width;
+    for(let y=0;y<H;y+=gap)for(let x=0;x<W;x+=gap){const px=Math.round(x*DPR),py=Math.round(y*DPR);if(img[(py*iw+px)*4+3]>100)pos.push({x,y});}
+    if(pos.length>MAX_PARTICLES){for(let i=pos.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pos[i],pos[j]]=[pos[j],pos[i]];}pos.length=MAX_PARTICLES;}
+    return pos;
 }
 
-// ==================== FIREWORK SYSTEM ====================
+// ==================== FIREWORKS ====================
 class Rocket {
-    constructor() {
-        this.x = Math.random() * W;
-        this.y = H + 10;
-        this.targetY = H * (0.08 + Math.random() * 0.38);
-        this.vx = (Math.random() - 0.5) * 3;
-        this.vy = -(7 + Math.random() * 5);
-        this.color = randomFireworkColor();
-        this.alive = true;
-        this.trail = [];
-    }
-    update() {
-        this.trail.push({ x: this.x, y: this.y, a: 0.7 });
-        if (this.trail.length > 8) this.trail.shift();
-        this.trail.forEach(t => t.a *= 0.78);
-        this.x += this.vx;
-        this.y += this.vy;
-        this.vy += 0.11;
-        if (this.vy > -0.5 || this.y <= this.targetY) {
-            this.alive = false;
-            return true;
-        }
-        return false;
-    }
-    draw() {
-        this.trail.forEach(t => {
-            ctx.globalAlpha = t.a;
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.arc(t.x, t.y, 1.5, 0, Math.PI * 2);
-            ctx.fill();
-        });
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-    }
+    constructor(){this.x=Math.random()*W;this.y=H+10;this.targetY=H*(0.08+Math.random()*0.38);this.vx=(Math.random()-0.5)*3;this.vy=-(7+Math.random()*5);this.color=randomFireworkColor();this.alive=true;this.trail=[];}
+    update(){this.trail.push({x:this.x,y:this.y,a:0.7});if(this.trail.length>8)this.trail.shift();this.trail.forEach(t=>t.a*=0.78);this.x+=this.vx;this.y+=this.vy;this.vy+=0.11;if(this.vy>-0.5||this.y<=this.targetY){this.alive=false;return true;}return false;}
+    draw(){this.trail.forEach(t=>{ctx.globalAlpha=t.a;ctx.fillStyle=this.color;ctx.beginPath();ctx.arc(t.x,t.y,1.5,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(this.x,this.y,2.5,0,Math.PI*2);ctx.fill();}
 }
-
 class Spark {
-    constructor(x, y, color) {
-        this.x = x; this.y = y;
-        this.color = color;
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 0.8 + Math.random() * 5;
-        this.vx = Math.cos(angle) * speed;
-        this.vy = Math.sin(angle) * speed;
-        this.alpha = 1;
-        this.size = 0.5 + Math.random() * 2;
-        this.alive = true;
-        this.gravity = 0.035;
-        this.friction = 0.974;
-    }
-    update() {
-        this.vx *= this.friction;
-        this.vy *= this.friction;
-        this.vy += this.gravity;
-        this.x += this.vx;
-        this.y += this.vy;
-        this.alpha -= 0.009;
-        if (this.alpha <= 0) this.alive = false;
-    }
-    draw() {
-        if (!this.alive) return;
-        ctx.globalAlpha = this.alpha;
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-    }
+    constructor(x,y,c){this.x=x;this.y=y;this.color=c;const a=Math.random()*Math.PI*2,s=0.8+Math.random()*5;this.vx=Math.cos(a)*s;this.vy=Math.sin(a)*s;this.alpha=1;this.size=0.5+Math.random()*2;this.alive=true;this.g=0.035;this.f=0.974;}
+    update(){this.vx*=this.f;this.vy*=this.f;this.vy+=this.g;this.x+=this.vx;this.y+=this.vy;this.alpha-=0.009;if(this.alpha<=0)this.alive=false;}
+    draw(){if(!this.alive)return;ctx.globalAlpha=this.alpha;ctx.fillStyle=this.color;ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);ctx.fill();}
 }
-
-let rockets = [];
-let sparks  = [];
-let fwTimer = 0;
-let fwRate  = 800;
-
-function updateFireworks(dt) {
-    fwTimer += dt;
-    if (fwTimer > fwRate) {
-        rockets.push(new Rocket());
-        if (Math.random() > 0.55) rockets.push(new Rocket());
-        fwTimer = 0;
-        fwRate = 500 + Math.random() * 900;
-    }
-    for (let i = rockets.length - 1; i >= 0; i--) {
-        const boom = rockets[i].update();
-        if (boom) {
-            const r = rockets[i];
-            const n = 45 + Math.floor(Math.random() * 55);
-            for (let j = 0; j < n; j++) sparks.push(new Spark(r.x, r.y, r.color));
-            rockets.splice(i, 1);
-        } else if (!rockets[i].alive) { rockets.splice(i, 1); }
-    }
-    for (let i = sparks.length - 1; i >= 0; i--) {
-        sparks[i].update();
-        if (!sparks[i].alive) sparks.splice(i, 1);
-    }
+let rockets=[],sparks=[],fwTimer=0,fwRate=800;
+function updateFireworks(dt){
+    fwTimer+=dt;if(fwTimer>fwRate){rockets.push(new Rocket());if(Math.random()>0.55)rockets.push(new Rocket());fwTimer=0;fwRate=500+Math.random()*900;}
+    for(let i=rockets.length-1;i>=0;i--){const b=rockets[i].update();if(b){const r=rockets[i],n=45+Math.floor(Math.random()*55);for(let j=0;j<n;j++)sparks.push(new Spark(r.x,r.y,r.color));rockets.splice(i,1);}else if(!rockets[i].alive)rockets.splice(i,1);}
+    for(let i=sparks.length-1;i>=0;i--){sparks[i].update();if(!sparks[i].alive)sparks.splice(i,1);}
 }
+function drawFireworks(){rockets.forEach(r=>r.draw());sparks.forEach(s=>s.draw());}
 
-function drawFireworks() {
-    rockets.forEach(r => r.draw());
-    sparks.forEach(s => s.draw());
-}
+// ==================== RINGS ====================
+let rings=[];
+class Ring{constructor(x,y,c){this.x=x;this.y=y;this.radius=0;this.maxRadius=Math.max(W,H)*0.45;this.alpha=0.7;this.color=c||'#ffd700';this.alive=true;}update(){this.radius+=(this.maxRadius-this.radius)*0.04+2;this.alpha-=0.012;if(this.alpha<=0)this.alive=false;}draw(){if(!this.alive)return;ctx.globalAlpha=this.alpha;ctx.strokeStyle=this.color;ctx.lineWidth=2;ctx.beginPath();ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);ctx.stroke();}}
 
-// ==================== SHOCKWAVE RING ====================
-let rings = [];
-class Ring {
-    constructor(x, y, color) {
-        this.x = x; this.y = y;
-        this.radius = 0;
-        this.maxRadius = Math.max(W, H) * 0.45;
-        this.alpha = 0.7;
-        this.color = color || '#ffd700';
-        this.alive = true;
-    }
-    update() {
-        this.radius += (this.maxRadius - this.radius) * 0.04 + 2;
-        this.alpha -= 0.012;
-        if (this.alpha <= 0) this.alive = false;
-    }
-    draw() {
-        if (!this.alive) return;
-        ctx.globalAlpha = this.alpha;
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.stroke();
-    }
-}
-
-// ==================== BACKGROUND STARS ====================
-const stars = [];
-for (let i = 0; i < 120; i++) {
-    stars.push({
-        x: Math.random() * 3000, y: Math.random() * 2000,
-        size: Math.random() * 1.5 + 0.4,
-        twinkle: Math.random() * Math.PI * 2,
-        speed: 0.5 + Math.random() * 2
-    });
-}
-
-function drawStars(t) {
-    stars.forEach(s => {
-        const sx = s.x % W;
-        const sy = s.y % H;
-        const a = 0.3 + 0.3 * Math.sin(t * 0.001 * s.speed + s.twinkle);
-        ctx.globalAlpha = a;
-        ctx.fillStyle = '#fff';
-        ctx.beginPath();
-        ctx.arc(sx, sy, s.size, 0, Math.PI * 2);
-        ctx.fill();
-    });
-}
+// ==================== STARS ====================
+const stars=[];for(let i=0;i<120;i++)stars.push({x:Math.random()*3000,y:Math.random()*2000,size:Math.random()*1.5+0.4,tw:Math.random()*Math.PI*2,sp:0.5+Math.random()*2});
+function drawStars(t){stars.forEach(s=>{ctx.globalAlpha=0.3+0.3*Math.sin(t*0.001*s.sp+s.tw);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s.x%W,s.y%H,s.size,0,Math.PI*2);ctx.fill();});}
 
 // ==================== AUDIO ====================
-let audioCtx = null;
-function initAudio() {
-    if (!audioCtx) {
-        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
-    }
-}
-function playTone(freq, dur, type = 'sine', vol = 0.12) {
-    if (!audioCtx) return;
-    try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.frequency.value = freq; osc.type = type;
-        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-        osc.start(); osc.stop(audioCtx.currentTime + dur);
-    } catch(e) {}
-}
-function playCountdownBeep() { playTone(523, 0.25, 'triangle', 0.15); }
-function playRevealChime() {
-    playTone(784, 0.15, 'sine', 0.12);
-    setTimeout(() => playTone(988, 0.15, 'sine', 0.12), 100);
-    setTimeout(() => playTone(1318, 0.4, 'sine', 0.15), 200);
-}
+let audioCtx=null;
+function initAudio(){if(!audioCtx)try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}
+function playTone(f,d,t='sine',v=0.12){if(!audioCtx)return;try{const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.frequency.value=f;o.type=t;g.gain.setValueAtTime(v,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+d);o.start();o.stop(audioCtx.currentTime+d);}catch(e){}}
+function playCountdownBeep(){playTone(523,0.25,'triangle',0.15);}
+function playRevealChime(){playTone(784,0.15,'sine',0.12);setTimeout(()=>playTone(988,0.15,'sine',0.12),100);setTimeout(()=>playTone(1318,0.4,'sine',0.15),200);}
 
 // ==================== SCENE MANAGER ====================
-let textParticles  = [];
-let dyingParticles = [];
-let sceneIndex = -1, sceneState = 'idle', stateStart = 0;
-let started = false, beepPlayed = false;
+let textParticles=[],dyingParticles=[];
+let sceneIndex=-1,sceneState='idle',stateStart=0,started=false,beepPlayed=false;
 
 function advanceScene() {
     sceneIndex++;
-    if (sceneIndex >= TEXT_SEQUENCE.length) sceneIndex = 0;
-    const entry = TEXT_SEQUENCE[sceneIndex];
-    const isFin = !!entry.isFinal;
-    const positions = getTextPixels(entry.text);
-    textParticles = positions.map(p => new Particle(p.x, p.y, randomParticleColor(isFin)));
-    sceneState = 'forming';
-    stateStart = performance.now();
-    beepPlayed = false;
+    if (sceneIndex >= TEXT_SEQUENCE.length) {
+        // Finished all scenes -> transition to wheel
+        sceneState = 'toWheel';
+        stateStart = performance.now();
+        return;
+    }
+    const entry=TEXT_SEQUENCE[sceneIndex], isFin=!!entry.isFinal;
+    const pos=getTextPixels(entry.text);
+    textParticles=pos.map(p=>new Particle(p.x,p.y,randomParticleColor(isFin)));
+    sceneState='forming'; stateStart=performance.now(); beepPlayed=false;
 }
 
 function explodeScene() {
-    sceneState = 'exploding';
-    stateStart = performance.now();
-    dyingParticles = textParticles;
-    dyingParticles.forEach(p => p.explode());
-    textParticles = [];
-    for (let i = 0; i < 2 + Math.floor(Math.random() * 3); i++) rockets.push(new Rocket());
+    sceneState='exploding'; stateStart=performance.now();
+    dyingParticles=textParticles; dyingParticles.forEach(p=>p.explode()); textParticles=[];
+    for(let i=0;i<2+Math.floor(Math.random()*3);i++)rockets.push(new Rocket());
 }
+
+// ==================== WHEEL DRAWING ====================
+function drawWheel() {
+    const cx = W / 2;
+    const cy = H / 2;
+    const radius = Math.min(W * 0.32, H * 0.42);
+    const innerR = radius * 0.18;
+
+    // Fade in
+    wheelFadeIn = Math.min(1, wheelFadeIn + 0.02);
+    ctx.globalAlpha = wheelFadeIn;
+
+    // Title
+    ctx.fillStyle = '#ffd700';
+    ctx.font = `bold ${Math.round(Math.min(W*0.035, 28))}px "Segoe UI",Arial,sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🎉 VÒNG QUAY LÌ XÌ MAY MẮN 🎉', cx, cy - radius - Math.min(40, H*0.06));
+
+    // Shadow
+    ctx.save();
+    ctx.shadowColor = 'rgba(255,215,0,0.4)';
+    ctx.shadowBlur = 25;
+
+    // Segments
+    for (let i = 0; i < SEGMENT_COUNT; i++) {
+        const startAngle = wheelAngle + i * ARC - Math.PI / 2;
+        const endAngle = startAngle + ARC;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = WHEEL_SEGMENTS[i].color;
+        ctx.globalAlpha = wheelFadeIn;
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    // Labels
+    ctx.save();
+    for (let i = 0; i < SEGMENT_COUNT; i++) {
+        const midAngle = wheelAngle + i * ARC + ARC / 2 - Math.PI / 2;
+        const lx = cx + Math.cos(midAngle) * radius * 0.65;
+        const ly = cy + Math.sin(midAngle) * radius * 0.65;
+        ctx.save();
+        ctx.translate(lx, ly);
+        ctx.rotate(midAngle + Math.PI / 2);
+        ctx.fillStyle = '#fff';
+        ctx.font = `bold ${Math.round(Math.min(radius*0.16, 22))}px "Segoe UI",Arial,sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.globalAlpha = wheelFadeIn;
+        ctx.shadowColor = 'rgba(0,0,0,0.7)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(WHEEL_SEGMENTS[i].label, 0, 0);
+        ctx.restore();
+    }
+    ctx.restore();
+
+    // Center circle
+    ctx.globalAlpha = wheelFadeIn;
+    ctx.beginPath();
+    ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fill();
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Center text
+    if (!wheelSpinning && !wheelDone) {
+        ctx.fillStyle = '#ffd700';
+        ctx.font = `bold ${Math.round(innerR*0.5)}px "Segoe UI",Arial,sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('QUAY', cx, cy);
+    }
+
+    // Pointer (triangle at top)
+    ctx.globalAlpha = wheelFadeIn;
+    const pSize = Math.min(20, radius * 0.1);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - radius - pSize * 0.3);
+    ctx.lineTo(cx - pSize * 0.7, cy - radius - pSize * 1.8);
+    ctx.lineTo(cx + pSize * 0.7, cy - radius - pSize * 1.8);
+    ctx.closePath();
+    ctx.fillStyle = '#ffd700';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Outer ring decorations (dots)
+    for (let i = 0; i < 24; i++) {
+        const a = (i / 24) * Math.PI * 2 + performance.now() * 0.001;
+        const dx = cx + Math.cos(a) * (radius + 12);
+        const dy = cy + Math.sin(a) * (radius + 12);
+        ctx.beginPath();
+        ctx.arc(dx, dy, 3, 0, Math.PI * 2);
+        ctx.fillStyle = i % 2 === 0 ? '#ffd700' : '#ff4444';
+        ctx.globalAlpha = wheelFadeIn * (0.5 + 0.5 * Math.sin(performance.now() * 0.005 + i));
+        ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+}
+
+function getWheelSegmentAtPointer() {
+    // Pointer is at top (12 o'clock = -PI/2)
+    // Normalize angle
+    let a = (-wheelAngle + Math.PI / 2) % (Math.PI * 2);
+    if (a < 0) a += Math.PI * 2;
+    const idx = Math.floor(a / ARC) % SEGMENT_COUNT;
+    return idx;
+}
+
+function spinWheel() {
+    if (wheelSpinning || wheelDone) return;
+    if (localStorage.getItem('lixi2026_spun')) {
+        wheelDone = true;
+        const saved = localStorage.getItem('lixi2026_result');
+        if (saved) wheelResult = saved;
+        return;
+    }
+    wheelSpinning = true;
+    // Random speed: 15-25 rad/s, will decelerate
+    wheelSpinSpeed = 15 + Math.random() * 10;
+}
+
+function updateWheel(dt) {
+    if (!wheelSpinning) return;
+    const decel = 0.985; // deceleration per frame
+    wheelAngle += wheelSpinSpeed * (dt / 1000);
+    wheelSpinSpeed *= decel;
+
+    if (wheelSpinSpeed < 0.15) {
+        wheelSpinning = false;
+        wheelDone = true;
+        const idx = getWheelSegmentAtPointer();
+        wheelResult = WHEEL_SEGMENTS[idx].label;
+        localStorage.setItem('lixi2026_spun', 'true');
+        localStorage.setItem('lixi2026_result', wheelResult);
+        wheelResultTimer = performance.now();
+        // Spawn confetti
+        for (let i = 0; i < 120; i++) {
+            wheelConfetti.push({
+                x: W/2, y: H/2,
+                vx: (Math.random()-0.5)*12,
+                vy: -Math.random()*10-3,
+                size: Math.random()*6+3,
+                color: `hsl(${Math.random()*360},90%,60%)`,
+                alpha: 1,
+                rot: Math.random()*Math.PI*2,
+                rotSpd: (Math.random()-0.5)*0.3
+            });
+        }
+        // Extra fireworks
+        for (let i = 0; i < 8; i++) rockets.push(new Rocket());
+    }
+}
+
+function drawWheelConfetti() {
+    wheelConfetti.forEach(c => {
+        c.x += c.vx;
+        c.vy += 0.15;
+        c.y += c.vy;
+        c.vx *= 0.99;
+        c.alpha -= 0.005;
+        c.rot += c.rotSpd;
+        if (c.alpha <= 0) return;
+        ctx.save();
+        ctx.translate(c.x, c.y);
+        ctx.rotate(c.rot);
+        ctx.globalAlpha = c.alpha;
+        ctx.fillStyle = c.color;
+        ctx.fillRect(-c.size/2, -c.size/2, c.size, c.size*0.6);
+        ctx.restore();
+    });
+    wheelConfetti = wheelConfetti.filter(c => c.alpha > 0);
+}
+
+function drawWheelResult() {
+    if (!wheelResult) return;
+    const elapsed = performance.now() - wheelResultTimer;
+    if (elapsed < 100) return; // small delay
+
+    const cx = W/2, cy = H/2;
+    const boxW = Math.min(W*0.5, 350);
+    const boxH = Math.min(H*0.45, 200);
+
+    // Animate scale
+    let scale = Math.min(1, elapsed / 400);
+    scale = 1 - Math.pow(1 - scale, 3); // ease out
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+
+    // Box background
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = '#1a1a2e';
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 3;
+    const r = 16;
+    ctx.beginPath();
+    ctx.moveTo(-boxW/2+r, -boxH/2);
+    ctx.lineTo(boxW/2-r, -boxH/2);
+    ctx.quadraticCurveTo(boxW/2, -boxH/2, boxW/2, -boxH/2+r);
+    ctx.lineTo(boxW/2, boxH/2-r);
+    ctx.quadraticCurveTo(boxW/2, boxH/2, boxW/2-r, boxH/2);
+    ctx.lineTo(-boxW/2+r, boxH/2);
+    ctx.quadraticCurveTo(-boxW/2, boxH/2, -boxW/2, boxH/2-r);
+    ctx.lineTo(-boxW/2, -boxH/2+r);
+    ctx.quadraticCurveTo(-boxW/2, -boxH/2, -boxW/2+r, -boxH/2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#ffd700';
+    ctx.font = `bold ${Math.round(Math.min(boxW*0.1, 20))}px "Segoe UI",Arial,sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🎊 CHÚC MỪNG BẠN NHẬN ĐƯỢC 🎊', 0, -boxH*0.25);
+
+    ctx.fillStyle = '#ff1744';
+    ctx.font = `bold ${Math.round(Math.min(boxW*0.22, 52))}px "Segoe UI",Arial,sans-serif`;
+    ctx.fillText(wheelResult, 0, boxH*0.08);
+
+    ctx.fillStyle = '#aaa';
+    ctx.font = `${Math.round(Math.min(boxW*0.065, 15))}px "Segoe UI",Arial,sans-serif`;
+    ctx.fillText('Chụp màn hình và gửi cho anh để nhận lì xì nhé! 💰', 0, boxH*0.35);
+
+    ctx.restore();
+}
+
+// ==================== WHEEL CLICK ====================
+canvas.addEventListener('click', (e) => {
+    if (!showWheel) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left);
+    const my = (e.clientY - rect.top);
+    const cx = W/2, cy = H/2;
+    const dist = Math.sqrt((mx-cx)**2 + (my-cy)**2);
+    const radius = Math.min(W*0.32, H*0.42);
+
+    if (wheelDone && !wheelSpinning) return; // already done
+    if (dist < radius) spinWheel();
+});
+
+canvas.addEventListener('touchstart', (e) => {
+    if (!showWheel) return;
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const mx = touch.clientX - rect.left;
+    const my = touch.clientY - rect.top;
+    const cx = W/2, cy = H/2;
+    const dist = Math.sqrt((mx-cx)**2 + (my-cy)**2);
+    const radius = Math.min(W*0.32, H*0.42);
+
+    if (wheelDone && !wheelSpinning) return;
+    if (dist < radius) spinWheel();
+});
 
 // ==================== MAIN LOOP ====================
 let lastFrame = 0;
@@ -521,11 +512,8 @@ let lastFrame = 0;
 function loop(timestamp) {
     requestAnimationFrame(loop);
     if (!started) return;
-
-    const dt = timestamp - lastFrame;
-    lastFrame = timestamp;
+    const dt = timestamp - lastFrame; lastFrame = timestamp;
     if (dt > 150) return;
-
     const elapsed = timestamp - stateStart;
 
     // Clear
@@ -534,78 +522,75 @@ function loop(timestamp) {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, W, H);
 
-    // Stars
     drawStars(timestamp);
-
-    // Fireworks
     updateFireworks(dt);
     ctx.globalCompositeOperation = 'lighter';
     drawFireworks();
 
-    // Rings
-    for (let i = rings.length - 1; i >= 0; i--) {
-        rings[i].update(); rings[i].draw();
-        if (!rings[i].alive) rings.splice(i, 1);
-    }
+    for (let i=rings.length-1;i>=0;i--){rings[i].update();rings[i].draw();if(!rings[i].alive)rings.splice(i,1);}
 
     ctx.globalCompositeOperation = 'source-over';
 
-    switch (sceneState) {
-        case 'idle':
-            if (elapsed > 600) advanceScene();
-            break;
-        case 'forming': {
-            let settled = 0;
-            textParticles.forEach(p => { if (p.formToTarget()) settled++; });
-            if (!beepPlayed) {
-                beepPlayed = true;
-                if (TEXT_SEQUENCE[sceneIndex].isCountdown) playCountdownBeep();
-            }
-            if (elapsed > 1600 || settled > textParticles.length * 0.92) {
-                sceneState = 'holding';
-                stateStart = timestamp;
-                const entry = TEXT_SEQUENCE[sceneIndex];
-                if (entry.isReveal) {
-                    playRevealChime();
-                    for (let i = 0; i < 6; i++) rockets.push(new Rocket());
-                    rings.push(new Ring(W/2, H/2, '#ffd700'));
-                    rings.push(new Ring(W/2, H/2, '#ffffff'));
-                }
-            }
-            break;
+    if (showWheel) {
+        // Wheel mode
+        updateWheel(dt);
+        drawWheel();
+        ctx.globalCompositeOperation = 'source-over';
+        drawWheelConfetti();
+        drawWheelResult();
+
+        // Check if already spun before
+        if (!wheelDone && localStorage.getItem('lixi2026_spun')) {
+            wheelDone = true;
+            wheelResult = localStorage.getItem('lixi2026_result') || '???';
+            wheelResultTimer = performance.now();
         }
-        case 'holding':
-            textParticles.forEach(p => p.holdPosition(timestamp));
-            if (elapsed > TEXT_SEQUENCE[sceneIndex].hold) explodeScene();
-            break;
-        case 'exploding':
-            dyingParticles.forEach(p => p.updateExploding());
-            dyingParticles = dyingParticles.filter(p => p.alive);
-            if (elapsed > 1800 || dyingParticles.length === 0) {
-                dyingParticles = [];
-                sceneState = 'idle';
-                stateStart = timestamp;
+
+    } else {
+        // Particle text mode
+        switch (sceneState) {
+            case 'idle':
+                if (elapsed > 600) advanceScene();
+                break;
+            case 'forming': {
+                let settled = 0;
+                textParticles.forEach(p => { if (p.formToTarget()) settled++; });
+                if (!beepPlayed) { beepPlayed = true; if (TEXT_SEQUENCE[sceneIndex]?.isCountdown) playCountdownBeep(); }
+                if (elapsed > 1600 || settled > textParticles.length * 0.92) {
+                    sceneState = 'holding'; stateStart = timestamp;
+                    const entry = TEXT_SEQUENCE[sceneIndex];
+                    if (entry?.isReveal) { playRevealChime(); for(let i=0;i<6;i++)rockets.push(new Rocket()); rings.push(new Ring(W/2,H/2,'#ffd700')); rings.push(new Ring(W/2,H/2,'#ffffff')); }
+                }
+                break;
             }
-            break;
+            case 'holding':
+                textParticles.forEach(p => p.holdPosition(timestamp));
+                if (elapsed > TEXT_SEQUENCE[sceneIndex].hold) explodeScene();
+                break;
+            case 'exploding':
+                dyingParticles.forEach(p => p.updateExploding());
+                dyingParticles = dyingParticles.filter(p => p.alive);
+                if (elapsed > 1800 || dyingParticles.length === 0) {
+                    dyingParticles = []; sceneState = 'idle'; stateStart = timestamp;
+                }
+                break;
+            case 'toWheel':
+                // Fade out remaining particles then show wheel
+                dyingParticles.forEach(p => p.updateExploding());
+                dyingParticles = dyingParticles.filter(p => p.alive);
+                if (elapsed > 2000) {
+                    showWheel = true;
+                    dyingParticles = [];
+                }
+                break;
+        }
+
+        ctx.globalCompositeOperation = 'lighter';
+        textParticles.forEach(p => p.drawGlow());
+        textParticles.forEach(p => p.draw());
+        dyingParticles.forEach(p => { ctx.globalAlpha=p.alpha*0.2;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size*2,0,Math.PI*2);ctx.fill(); });
+        dyingParticles.forEach(p => p.draw());
     }
-
-    // Draw particles
-    ctx.globalCompositeOperation = 'lighter';
-
-    // Glow layer
-    textParticles.forEach(p => p.drawGlow());
-    // Core layer
-    textParticles.forEach(p => p.draw());
-
-    // Dying particles
-    dyingParticles.forEach(p => {
-        ctx.globalAlpha = p.alpha * 0.2;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
-        ctx.fill();
-    });
-    dyingParticles.forEach(p => p.draw());
 
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
@@ -615,24 +600,16 @@ function loop(timestamp) {
 const rotateOverlay = document.getElementById('rotateOverlay');
 const bgMusic = document.getElementById('bgMusic');
 bgMusic.volume = 0.5;
-
-function tryPlayMusic() {
-    bgMusic.play().catch(() => {});
-}
+function tryPlayMusic() { bgMusic.play().catch(() => {}); }
 
 setTimeout(() => {
     rotateOverlay.classList.add('hidden');
     setTimeout(() => rotateOverlay.remove(), 600);
-    initAudio();
-    tryPlayMusic();
-    resize();
-    started = true;
-    sceneState = 'idle';
-    stateStart = performance.now();
-    lastFrame = performance.now();
+    initAudio(); tryPlayMusic(); resize();
+    started = true; sceneState = 'idle';
+    stateStart = performance.now(); lastFrame = performance.now();
 }, 2000);
 
-// Mobile browsers need user interaction to play audio
 document.addEventListener('click', () => { initAudio(); tryPlayMusic(); }, { once: true });
 document.addEventListener('touchstart', () => { initAudio(); tryPlayMusic(); }, { once: true });
 
