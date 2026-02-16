@@ -13,43 +13,9 @@
             user-select: none;
         }
         canvas { display: block; }
-        #startOverlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            cursor: pointer;
-        }
-        #startOverlay .startBtn {
-            color: #ffd700;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: clamp(18px, 4vw, 32px);
-            text-align: center;
-            padding: 20px 50px;
-            border: 2px solid #ffd700;
-            border-radius: 12px;
-            transition: all 0.3s;
-            animation: pulse 2s infinite;
-        }
-        #startOverlay .startBtn:hover {
-            background: rgba(255,215,0,0.15);
-            transform: scale(1.05);
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
-        }
     </style>
 </head>
 <body>
-
-<div id="startOverlay">
-    <div class="startBtn">Click to Start</div>
-</div>
 
 <canvas id="canvas"></canvas>
 
@@ -588,15 +554,15 @@ function loop(timestamp) {
 }
 
 // ==================== START ====================
-const overlay = document.getElementById('startOverlay');
-overlay.addEventListener('click', () => {
-    overlay.style.display = 'none';
-    initAudio();
-    started = true;
-    sceneState = 'idle';
-    stateStart = performance.now();
-    lastFrame = performance.now();
-});
+initAudio();
+started = true;
+sceneState = 'idle';
+stateStart = performance.now();
+lastFrame = performance.now();
+
+// Enable audio on first tap (required by mobile browsers)
+document.addEventListener('click', () => initAudio(), { once: true });
+document.addEventListener('touchstart', () => initAudio(), { once: true });
 
 requestAnimationFrame(loop);
 </script>
