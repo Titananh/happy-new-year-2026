@@ -244,7 +244,7 @@ function explodeScene() {
 function drawWheel() {
     const cx = W / 2;
     const cy = H / 2;
-    const radius = Math.min(W * 0.32, H * 0.42);
+    const radius = Math.min(W * 0.24, H * 0.36);
     const innerR = radius * 0.18;
 
     // Fade in
@@ -288,7 +288,12 @@ function drawWheel() {
         const ly = cy + Math.sin(midAngle) * radius * 0.65;
         ctx.save();
         ctx.translate(lx, ly);
-        ctx.rotate(midAngle + Math.PI / 2);
+        // Flip text so it's always readable (not upside down)
+        let textAngle = midAngle + Math.PI / 2;
+        if (midAngle > 0 && midAngle < Math.PI) {
+            textAngle += Math.PI;
+        }
+        ctx.rotate(textAngle);
         ctx.fillStyle = '#fff';
         ctx.font = `bold ${Math.round(Math.min(radius*0.16, 22))}px "Segoe UI",Arial,sans-serif`;
         ctx.textAlign = 'center';
@@ -486,7 +491,7 @@ canvas.addEventListener('click', (e) => {
     const my = (e.clientY - rect.top);
     const cx = W/2, cy = H/2;
     const dist = Math.sqrt((mx-cx)**2 + (my-cy)**2);
-    const radius = Math.min(W*0.32, H*0.42);
+    const radius = Math.min(W*0.24, H*0.36);
 
     if (wheelDone && !wheelSpinning) return; // already done
     if (dist < radius) spinWheel();
@@ -500,7 +505,7 @@ canvas.addEventListener('touchstart', (e) => {
     const my = touch.clientY - rect.top;
     const cx = W/2, cy = H/2;
     const dist = Math.sqrt((mx-cx)**2 + (my-cy)**2);
-    const radius = Math.min(W*0.32, H*0.42);
+    const radius2 = Math.min(W*0.24, H*0.36);
 
     if (wheelDone && !wheelSpinning) return;
     if (dist < radius) spinWheel();
