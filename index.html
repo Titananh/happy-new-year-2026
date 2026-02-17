@@ -58,7 +58,7 @@
 
 <div id="rotateOverlay">
     <div class="rotate-icon"></div>
-    <div class="rotate-text">Vui lòng xoay ngang điện thoại<br>và bật loa to lên nhé 🔊</div>
+    <div class="rotate-text">Vui lòng xoay ngang điện thoại<br>và bật loa to lên nhé 🔊<br><br><span style="font-size:clamp(12px,2.5vw,18px);opacity:0.8">👆 Chạm vào đây để bắt đầu</span></div>
 </div>
 <div id="portraitBlocker">
     <div class="rotate-icon"></div>
@@ -803,13 +803,15 @@ function loop(timestamp) {
 // ==================== START ====================
 const rotateOverlay = document.getElementById('rotateOverlay');
 
-setTimeout(() => {
+function startApp() {
     rotateOverlay.classList.add('hidden');
     setTimeout(() => rotateOverlay.remove(), 600);
-    initAudio(); resize();
+    initAudio();
+    // Unlock audio on this user gesture
+    bgMusic.play().then(() => { musicStarted = false; bgMusic.pause(); bgMusic.currentTime = 0; }).catch(() => {});
+    resize();
     started = true;
 
-    // If Tet already passed or <=3s left -> skip countdown, play music immediately
     const diff = TET_TARGET - Date.now();
     if (diff <= 3000) {
         countdownPhase = false;
@@ -817,16 +819,18 @@ setTimeout(() => {
         tryPlayMusic();
         sceneState = 'idle';
     } else {
-        // Countdown phase - NO music yet
         countdownPhase = true;
     }
 
     stateStart = performance.now(); lastFrame = performance.now();
-}, 2000);
+}
 
-// User interaction to unlock audio (needed for mobile)
-document.addEventListener('click', () => { initAudio(); }, { once: true });
-document.addEventListener('touchstart', () => { initAudio(); }, { once: true });
+// Overlay requires tap to dismiss (ensures user gesture for audio)
+rotateOverlay.addEventListener('click', startApp, { once: true });
+rotateOverlay.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    startApp();
+}, { once: true });
 
 requestAnimationFrame(loop);
 </script>
