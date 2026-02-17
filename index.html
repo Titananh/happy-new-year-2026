@@ -805,15 +805,27 @@ const rotateOverlay = document.getElementById('rotateOverlay');
 
 function startApp() {
     rotateOverlay.classList.add('hidden');
-    setTimeout(() => rotateOverlay.remove(), 600);
+    setTimeout(function() { rotateOverlay.remove(); }, 600);
     initAudio();
-    // Play music immediately on user tap
+
+    // Robust mobile audio: force load + play with retry
     musicStarted = true;
-    bgMusic.play().catch(() => {});
+    bgMusic.load();
+    bgMusic.play().catch(function() {
+        bgMusic.addEventListener('canplay', function() {
+            bgMusic.play().catch(function() {});
+        }, { once: true });
+    });
+    var musicRetry = setInterval(function() {
+        if (!bgMusic.paused) { clearInterval(musicRetry); return; }
+        bgMusic.play().catch(function() {});
+    }, 500);
+    setTimeout(function() { clearInterval(musicRetry); }, 15000);
+
     resize();
     started = true;
 
-    const diff = TET_TARGET - Date.now();
+    var diff = TET_TARGET - Date.now();
     if (diff <= 3000) {
         countdownPhase = false;
         countdownTriggered = true;
