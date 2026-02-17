@@ -808,7 +808,7 @@ function startApp() {
     setTimeout(() => rotateOverlay.remove(), 600);
     initAudio();
     // Unlock audio on this user gesture
-    bgMusic.play().then(() => { musicStarted = false; bgMusic.pause(); bgMusic.currentTime = 0; }).catch(() => {});
+    bgMusic.play().then(() => { if (!musicStarted) { bgMusic.pause(); bgMusic.currentTime = 0; } }).catch(() => {});
     resize();
     started = true;
 
